@@ -19,8 +19,7 @@ describe('ECDH key exchange @lightweight', function () {
       const curve = new elliptic_curves.Curve(oid);
       return elliptic_curves.ecdh.decrypt(
         new openpgp.OID(curve.oid),
-        cipher,
-        hash,
+        new openpgp.KDFParams({ cipher, hash }),
         new Uint8Array(ephemeral),
         data,
         new Uint8Array(pub),
@@ -136,8 +135,9 @@ describe('ECDH key exchange @lightweight', function () {
     );
     let cipher_algo = curveObj.cipher;
     const hash_algo = curveObj.hash;
+    const kdfParams = new openpgp.KDFParams({ cipher: cipher_algo, hash: hash_algo });
     const param = openpgp.crypto.publicKey.elliptic.ecdh.buildEcdhParam(
-      openpgp.enums.publicKey.ecdh, oid, cipher_algo, hash_algo, fingerprint
+      openpgp.enums.publicKey.ecdh, oid, kdfParams, fingerprint
     );
     cipher_algo = openpgp.enums.read(openpgp.enums.symmetric, cipher_algo);
     const Z = await openpgp.crypto.publicKey.elliptic.ecdh.kdf(
@@ -154,8 +154,9 @@ describe('ECDH key exchange @lightweight', function () {
     );
     let cipher_algo = curveObj.cipher;
     const hash_algo = curveObj.hash;
+    const kdfParams = new openpgp.KDFParams({ cipher: cipher_algo, hash: hash_algo });
     const param = openpgp.crypto.publicKey.elliptic.ecdh.buildEcdhParam(
-      openpgp.enums.publicKey.ecdh, oid, cipher_algo, hash_algo, fingerprint
+      openpgp.enums.publicKey.ecdh, oid, kdfParams, fingerprint
     );
     cipher_algo = openpgp.enums.read(openpgp.enums.symmetric, cipher_algo);
     const Z = await openpgp.crypto.publicKey.elliptic.ecdh.kdf(
@@ -186,8 +187,9 @@ describe('ECDH key exchange @lightweight', function () {
     const sharedKey = result.sharedKey;
     let cipher_algo = curveObj.cipher;
     const hash_algo = curveObj.hash;
+    const kdfParams = new openpgp.KDFParams({ cipher: cipher_algo, hash: hash_algo });
     const param = openpgp.crypto.publicKey.elliptic.ecdh.buildEcdhParam(
-      openpgp.enums.publicKey.ecdh, oid, cipher_algo, hash_algo, fingerprint
+      openpgp.enums.publicKey.ecdh, oid, kdfParams, fingerprint
     );
     cipher_algo = openpgp.enums.read(openpgp.enums.symmetric, cipher_algo);
     const Z = await openpgp.crypto.publicKey.elliptic.ecdh.kdf(
@@ -279,5 +281,79 @@ describe('ECDH key exchange @lightweight', function () {
         expect(Array.from(ECDHE_Z1).join(' ') === Array.from(ECDHE_Z2).join(' ')).to.be.true;
       }));
     });
+  });
+});
+
+describe('KDF parameters', function () {
+  const fingerprint = new Uint8Array([
+    177, 183, 116, 123, 76, 133, 245, 212, 151, 243,
+    236, 71, 245, 86, 3, 168, 101, 74, 209, 105
+  ]);
+
+  it('Valid serialization', async function () {
+    const cipher = openpgp.enums.symmetric.aes256;
+    const hash = openpgp.enums.hash.sha256;
+
+    const v1 = new openpgp.KDFParams({ cipher, hash });
+    const v1Copy = new openpgp.KDFParams({});
+    v1Copy.read(v1.write());
+    expect(v1Copy).to.deep.equal(v1);
+
+    const v1Flags0x0 = new openpgp.KDFParams({
+      cipher,
+      hash,
+      flags: 0x0 // discarded
+    });
+    const v1Flags0x0Copy = new openpgp.KDFParams({});
+    v1Flags0x0Copy.read(v1Flags0x0.write());
+    v1Flags0x0.flags = undefined;
+    expect(v1Flags0x0Copy).to.deep.equal(v1Flags0x0);
+
+    const v2Flags0x3 = new openpgp.KDFParams({
+      cipher,
+      hash,
+      version: 2,
+      flags: 0x3,
+      replacementFingerprint: fingerprint,
+      replacementKDFParams: new Uint8Array([3, 1, cipher, hash])
+    });
+    const v2Flags0x3Copy = new openpgp.KDFParams();
+    v2Flags0x3Copy.read(v2Flags0x3.write());
+    expect(v2Flags0x3Copy).to.deep.equal(v2Flags0x3);
+
+    const v2Flags0x0 = new openpgp.KDFParams({
+      cipher,
+      hash,
+      version: 2,
+      flags: 0x0
+    });
+    const v2Flags0x0Copy = new openpgp.KDFParams({});
+    v2Flags0x0Copy.read(v2Flags0x0.write());
+
+    expect(v2Flags0x0Copy).to.deep.equal(v2Flags0x0);
+
+    const v2Flags0x1 = new openpgp.KDFParams({
+      cipher,
+      hash,
+      version: 2,
+      flags: 0x1,
+      replacementFingerprint: fingerprint
+    });
+    const v2Flags0x1Copy = new openpgp.KDFParams();
+    v2Flags0x1Copy.read(v2Flags0x1.write());
+    v2Flags0x1.replacementKDFParams = null;
+    expect(v2Flags0x1Copy).to.deep.equal(v2Flags0x1);
+
+    const v2Flags0x2 = new openpgp.KDFParams({
+      cipher,
+      hash,
+      version: 2,
+      flags: 0x2,
+      replacementKDFParams: new Uint8Array([3, 1, cipher, hash])
+    });
+    const v2Flags0x2Copy = new openpgp.KDFParams();
+    v2Flags0x2Copy.read(v2Flags0x2.write());
+    v2Flags0x2.replacementFingerprint = null;
+    expect(v2Flags0x2Copy).to.deep.equal(v2Flags0x2);
   });
 });
