@@ -97,7 +97,7 @@ KDFParams.prototype.write = function () {
 
   const v2Fields = utils.concatUint8Array([
     new Uint8Array([4, 2, this.hash, this.cipher, this.flags]),
-    this.replacementFingerprint ? this.replacementFingerprint : new Uint8Array(),
+    this.replacementFingerprint || new Uint8Array(),
     this.replacementKDFParams || new Uint8Array()
   ]);
 

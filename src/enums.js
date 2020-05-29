@@ -80,6 +80,7 @@ export default {
   },
 
   /** KDF parameters flags
+   * Non-standard extensions (for now) to allow email forwarding
    * @enum {Integer}
    * @readonly
    */
