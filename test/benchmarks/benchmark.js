@@ -58,6 +58,11 @@ const onError = err => {
     await openpgp.verify({ message, verificationKeys: publicKey, expectSigned: true });
   }));
 
+  suite.add('new dummy test', wrapAsync(async () => {
+    const message = await openpgp.readMessage({ armoredMessage: armoredSignedMessage });
+    await openpgp.verify({ message, verificationKeys: publicKey, expectSigned: true });
+  }));
+
   suite.on('cycle', event => {
     // Output benchmark result by converting benchmark result to string
     // eslint-disable-next-line no-console
