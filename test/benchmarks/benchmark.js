@@ -56,6 +56,7 @@ const onError = err => {
   suite.add('openpgp.verify', wrapAsync(async () => {
     const message = await openpgp.readMessage({ armoredMessage: armoredSignedMessage });
     await openpgp.verify({ message, verificationKeys: publicKey, expectSigned: true });
+    await openpgp.verify({ message, verificationKeys: publicKey, expectSigned: true });
   }));
 
   suite.add('new dummy test', wrapAsync(async () => {
