@@ -181,8 +181,9 @@ class PublicKeyEncryptedSessionKeyPacket {
     // v6 PKESK packet, as it is included in the v2 SEIPD packet.
     const sessionKeyAlgorithm = this.version === 3 ? this.sessionKeyAlgorithm : null;
     const encoded = encodeSessionKey(this.version, algo, sessionKeyAlgorithm, this.sessionKey);
+    const privateParams = algo === enums.publicKey.aead ? key.privateParams : null;
     this.encrypted = await crypto.publicKeyEncrypt(
-      algo, sessionKeyAlgorithm, key.publicParams, encoded, key.getFingerprintBytes());
+      algo, sessionKeyAlgorithm, key.publicParams, privateParams, encoded, key.getFingerprintBytes());
   }
 
   /**
@@ -225,6 +226,7 @@ function encodeSessionKey(version, keyAlgo, cipherAlgo, sessionKeyData) {
     case enums.publicKey.rsaEncryptSign:
     case enums.publicKey.elgamal:
     case enums.publicKey.ecdh:
+    case enums.publicKey.aead:
       // add checksum
       return util.concatUint8Array([
         new Uint8Array(version === 6 ? [] : [cipherAlgo]),
@@ -245,7 +247,8 @@ function decodeSessionKey(version, keyAlgo, decryptedData, randomSessionKey) {
     case enums.publicKey.rsaEncrypt:
     case enums.publicKey.rsaEncryptSign:
     case enums.publicKey.elgamal:
-    case enums.publicKey.ecdh: {
+    case enums.publicKey.ecdh:
+    case enums.publicKey.aead: {
       // verify checksum in constant time
       const result = decryptedData.subarray(0, decryptedData.length - 2);
       const checksum = decryptedData.subarray(decryptedData.length - 2);
