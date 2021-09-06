@@ -7,8 +7,9 @@ on:
 jobs:
   benchmark:
     name: Time benchmark
+    environment:
+      name: benchmark
     runs-on: ubuntu-latest
-
     steps:
       # check out pull request branch
       - uses: actions/checkout@v2
