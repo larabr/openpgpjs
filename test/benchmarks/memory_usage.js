@@ -152,6 +152,8 @@ class MemoryBenchamrkSuite {
     const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
     assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
     await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+
+    await openpgp.encrypt({ message: await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage }), passwords, config });
   });
 
   // streaming tests
