@@ -2,7 +2,7 @@ name: Performance Regression Test
 
 on:
   pull_request:
-    branches: [master]
+    branches: [ci-benchmark-memory-base]
 
 jobs:
   benchmark:
@@ -17,7 +17,7 @@ jobs:
       # check out master branch (to compare performance)
       - uses: actions/checkout@v2
         with:
-          ref: master
+          ref: ci-benchmark-memory-base
           path: master
       - uses: actions/setup-node@v1
         with:
