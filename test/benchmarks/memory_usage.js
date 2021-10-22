@@ -2,7 +2,7 @@
 const assert = require('assert');
 const stream = require('@openpgp/web-stream-tools');
 const path = require('path');
-const { writeFileSync, unlinkSync } = require('fs');
+const { writeFileSync, unlinkSync, createReadStream } = require('fs');
 const { fork } = require('child_process');
 const openpgp = require('../..');
 
@@ -18,6 +18,7 @@ const benchmark = async function(fn) {
   writeFileSync(tmpFileName, `
 const assert = require('assert');
 const stream = require('@openpgp/web-stream-tools');
+const { createReadStream } = require('fs');
 const openpgp = require('../..');
 let maxMemoryComsumption;
 let activeSampling = false;
@@ -110,108 +111,196 @@ class MemoryBenchamrkSuite {
 
   suite.add('empty test (baseline)', () => {});
 
-  suite.add('openpgp.encrypt/decrypt (CFB, binary)', async () => {
-    const passwords = 'password';
-    const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000000).fill(1) });
+  // suite.add('openpgp.encrypt/decrypt (CFB, binary)', async () => {
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000000).fill(1) });
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
-    await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+  //   await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // });
 
-  suite.add('openpgp.encrypt/decrypt (CFB, text)', async () => {
-    const passwords = 'password';
-    const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ text: 'a'.repeat(10000000 / 2) }); // two bytes per character
+  // suite.add('openpgp.encrypt/decrypt (CFB, text)', async () => {
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ text: 'a'.repeat(10000000 / 2) }); // two bytes per character
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
-    await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+  //   await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // });
 
-  suite.add('openpgp.encrypt/decrypt (AEAD, binary)', async () => {
-    const passwords = 'password';
-    const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000000).fill(1) });
+  // suite.add('openpgp.encrypt/decrypt (AEAD, binary)', async () => {
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000000).fill(1) });
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
-    await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
+  //   await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // });
 
-  suite.add('openpgp.encrypt/decrypt (AEAD, text)', async () => {
-    const passwords = 'password';
-    const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ text: 'a'.repeat(10000000 / 2) }); // two bytes per character
+  // suite.add('openpgp.encrypt/decrypt (AEAD, text)', async () => {
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ text: 'a'.repeat(10000000 / 2) }); // two bytes per character
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
-    await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
+  //   await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // });
 
   // streaming tests
-  suite.add('openpgp.encrypt/decrypt (CFB, binary, with streaming)', async () => {
+//   suite.add('openpgp.encrypt/decrypt (CFB, binary, with streaming)', async () => {
+//     await stream.loadStreamsPonyfill();
+
+//     const passwords = 'password';
+//     const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+//     const plaintextMessage = await openpgp.createMessage({ binary: stream.toStream(new Uint8Array(1000000).fill(1)) });
+//     assert(plaintextMessage.fromStream);
+
+//     const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+//     const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+//     assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+//     const { data: decryptedData } = await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+//     await stream.readToEnd(decryptedData);
+//   });
+
+//   suite.add('openpgp.decrypt-verify (CFB, binary, with streaming)', async () => {
+//     await stream.loadStreamsPonyfill();
+
+//     const privateKey = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+// xVgEYXFgahYJKwYBBAHaRw8BAQdAHzCRqig6SFJJL0ZDoeAlsSQbOp/Ucc4A
+// +IX3n7uJBlEAAQCrsC+V3jXNE0ifW/EQWsSGYwPuyFjYCEtCtI9djHH4Tg++
+// zQ50ZXN0IDxhQGIuY29tPsKMBBAWCgAdBQJhcWBqBAsJBwgDFQgKBBYAAgEC
+// GQECGwMCHgEAIQkQWoVKaR/EFAwWIQQNy4WjaTAq9kYmhgZahUppH8QUDKrp
+// AP9HqbUshf5bSCNUiYMjc8rmyg5zeDiYO1EDqecKw/a5HwEA0tp1so8EZc/x
+// FxbRy/6BkmiPREJ62ewyC+1lt1NakAXHXQRhcWBqEgorBgEEAZdVAQUBAQdA
+// O+HoA9+FH7TnWCD2aF/MwlMlJbQvb+BvX3U0gmbV/AcDAQgHAAD/YKh+wGKr
+// tMaUVq2m+tBn3i8oIJloePGZ9nU3aHxmE6gSOcJ4BBgWCAAJBQJhcWBqAhsM
+// ACEJEFqFSmkfxBQMFiEEDcuFo2kwKvZGJoYGWoVKaR/EFAzASwEA3ATh53J1
+// rKdRErUMxSs/foD0JGj08efcDqXDxF58r0UA/088rX4q479fz+BcBMoCSIah
+// YC+CvDH11xM7cSlqm18N
+// =/RXG
+// -----END PGP PRIVATE KEY BLOCK-----` });
+//     const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+//     const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000000).fill(1) });
+//     const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, signingKeys: privateKey, encryptionKeys: privateKey, config });
+//     const encryptedMessage = await openpgp.readMessage({ armoredMessage: stream.toStream(armoredEncryptedMessage) });
+//     assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+
+//     const { data: decryptedData, signatures: [sigInfo] } = await openpgp.decrypt({ message: encryptedMessage, verificationKeys: privateKey, decryptionKeys:privateKey, config });
+//     await stream.readToEnd(decryptedData);
+//     await sigInfo.valid;
+//   });
+
+  suite.add('openpgp.decrypt-verify (CFB, large, with streaming)', async () => {
     await stream.loadStreamsPonyfill();
 
-    const passwords = 'password';
-    const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ binary: stream.toStream(new Uint8Array(1000000).fill(1)) });
-    assert(plaintextMessage.fromStream);
+    const privateKey = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+xVgEYXFgahYJKwYBBAHaRw8BAQdAHzCRqig6SFJJL0ZDoeAlsSQbOp/Ucc4A
++IX3n7uJBlEAAQCrsC+V3jXNE0ifW/EQWsSGYwPuyFjYCEtCtI9djHH4Tg++
+zQ50ZXN0IDxhQGIuY29tPsKMBBAWCgAdBQJhcWBqBAsJBwgDFQgKBBYAAgEC
+GQECGwMCHgEAIQkQWoVKaR/EFAwWIQQNy4WjaTAq9kYmhgZahUppH8QUDKrp
+AP9HqbUshf5bSCNUiYMjc8rmyg5zeDiYO1EDqecKw/a5HwEA0tp1so8EZc/x
+FxbRy/6BkmiPREJ62ewyC+1lt1NakAXHXQRhcWBqEgorBgEEAZdVAQUBAQdA
+O+HoA9+FH7TnWCD2aF/MwlMlJbQvb+BvX3U0gmbV/AcDAQgHAAD/YKh+wGKr
+tMaUVq2m+tBn3i8oIJloePGZ9nU3aHxmE6gSOcJ4BBgWCAAJBQJhcWBqAhsM
+ACEJEFqFSmkfxBQMFiEEDcuFo2kwKvZGJoYGWoVKaR/EFAzASwEA3ATh53J1
+rKdRErUMxSs/foD0JGj08efcDqXDxF58r0UA/088rX4q479fz+BcBMoCSIah
+YC+CvDH11xM7cSlqm18N
+=/RXG
+-----END PGP PRIVATE KEY BLOCK-----` });
+    const readableStream = createReadStream('./test/benchmarks/enc.zip.pgp');
+
+    const encryptedMessage = await openpgp.readMessage({ binaryMessage: readableStream });
     assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
-    const { data: decryptedData } = await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+
+    const { data: decryptedData, signatures: [sigInfo] } = await openpgp.decrypt({ message: encryptedMessage, verificationKeys: privateKey, decryptionKeys:privateKey, format: 'binary' });
+
+    console.log('start reading');
+    await stream.readToEnd(decryptedData);
+    await sigInfo.verified;
+  });
+
+  suite.add('openpgp.decrypt (CFB, large, with streaming)', async () => {
+    await stream.loadStreamsPonyfill();
+
+    const privateKey = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xVgEYXFgahYJKwYBBAHaRw8BAQdAHzCRqig6SFJJL0ZDoeAlsSQbOp/Ucc4A
++IX3n7uJBlEAAQCrsC+V3jXNE0ifW/EQWsSGYwPuyFjYCEtCtI9djHH4Tg++
+zQ50ZXN0IDxhQGIuY29tPsKMBBAWCgAdBQJhcWBqBAsJBwgDFQgKBBYAAgEC
+GQECGwMCHgEAIQkQWoVKaR/EFAwWIQQNy4WjaTAq9kYmhgZahUppH8QUDKrp
+AP9HqbUshf5bSCNUiYMjc8rmyg5zeDiYO1EDqecKw/a5HwEA0tp1so8EZc/x
+FxbRy/6BkmiPREJ62ewyC+1lt1NakAXHXQRhcWBqEgorBgEEAZdVAQUBAQdA
+O+HoA9+FH7TnWCD2aF/MwlMlJbQvb+BvX3U0gmbV/AcDAQgHAAD/YKh+wGKr
+tMaUVq2m+tBn3i8oIJloePGZ9nU3aHxmE6gSOcJ4BBgWCAAJBQJhcWBqAhsM
+ACEJEFqFSmkfxBQMFiEEDcuFo2kwKvZGJoYGWoVKaR/EFAzASwEA3ATh53J1
+rKdRErUMxSs/foD0JGj08efcDqXDxF58r0UA/088rX4q479fz+BcBMoCSIah
+YC+CvDH11xM7cSlqm18N
+=/RXG
+-----END PGP PRIVATE KEY BLOCK-----` });
+    const readableStream = createReadStream('./test/benchmarks/enc.zip.unsigned.pgp');
+
+    const encryptedMessage = await openpgp.readMessage({ binaryMessage: readableStream });
+    assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+
+    const { data: decryptedData } = await openpgp.decrypt({ message: encryptedMessage, verificationKeys: privateKey, decryptionKeys:privateKey, format: 'binary' });
+
+    console.log('start reading');
     await stream.readToEnd(decryptedData);
   });
 
-  suite.add('openpgp.encrypt/decrypt (CFB, text, with streaming)', async () => {
-    await stream.loadStreamsPonyfill();
+  // suite.add('openpgp.encrypt/decrypt (CFB, text, with streaming)', async () => {
+  //   await stream.loadStreamsPonyfill();
 
-    const passwords = 'password';
-    const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ text: stream.toStream('a'.repeat(10000000 / 2)) });
-    assert(plaintextMessage.fromStream);
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ text: stream.toStream('a'.repeat(10000000 / 2)) });
+  //   assert(plaintextMessage.fromStream);
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
-    const { data: decryptedData } = await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-    await stream.readToEnd(decryptedData);
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+  //   const { data: decryptedData } = await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  //   await stream.readToEnd(decryptedData);
+  // });
 
-  suite.add('openpgp.encrypt/decrypt (AEAD, binary, with streaming)', async () => {
-    await stream.loadStreamsPonyfill();
+  // suite.add('openpgp.encrypt/decrypt (AEAD, binary, with streaming)', async () => {
+  //   await stream.loadStreamsPonyfill();
 
-    const passwords = 'password';
-    const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ binary: stream.toStream(new Uint8Array(1000000).fill(1)) });
-    assert(plaintextMessage.fromStream);
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ binary: stream.toStream(new Uint8Array(1000000).fill(1)) });
+  //   assert(plaintextMessage.fromStream);
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
-    await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
+  //   await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // });
 
-  suite.add('openpgp.encrypt/decrypt (AEAD, text, with streaming)', async () => {
-    await stream.loadStreamsPonyfill();
+  // suite.add('openpgp.encrypt/decrypt (AEAD, text, with streaming)', async () => {
+  //   await stream.loadStreamsPonyfill();
 
-    const passwords = 'password';
-    const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
-    const plaintextMessage = await openpgp.createMessage({ text: stream.toStream('a'.repeat(10000000 / 2)) });
-    assert(plaintextMessage.fromStream);
+  //   const passwords = 'password';
+  //   const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  //   const plaintextMessage = await openpgp.createMessage({ text: stream.toStream('a'.repeat(10000000 / 2)) });
+  //   assert(plaintextMessage.fromStream);
 
-    const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
-    const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
-    assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
-    await openpgp.decrypt({ message: encryptedMessage, passwords, config });
-  });
+  //   const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  //   const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  //   assert.ok(encryptedMessage.packets[1] instanceof openpgp.AEADEncryptedDataPacket);
+  //   await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // });
 
   const stats = await suite.run();
   // Print JSON stats to stdout
