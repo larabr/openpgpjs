@@ -85,26 +85,26 @@ module.exports = function(config) {
 
     // define browsers
     customLaunchers: {
-      bs_firefox_85: {
+      bs_firefox_102: {
         base: 'BrowserStack',
         browser: 'Firefox',
-        browser_version: '85.0',
+        browser_version: '102.0',
         os: 'OS X',
-        os_version: 'Big Sur'
+        os_version: 'Monterey'
       },
-      bs_chrome_88: {
+      bs_chrome_103: {
         base: 'BrowserStack',
         browser: 'Chrome',
-        browser_version: '88.0',
+        browser_version: '103.0',
         os: 'OS X',
-        os_version: 'Big Sur'
+        os_version: 'Monterey'
       },
-      bs_safari_14: {
+      bs_safari_15: {
         base: 'BrowserStack',
         browser: 'Safari',
-        browser_version: '14.0',
+        browser_version: '15.0',
         os: 'OS X',
-        os_version: 'Big Sur'
+        os_version: 'Monterey'
       },
       bs_safari_13_1: { // no BigInt support
         base: 'BrowserStack',
@@ -113,12 +113,12 @@ module.exports = function(config) {
         os: 'OS X',
         os_version: 'Catalina'
       },
-      bs_ios_14: {
+      bs_ios_15: {
         base: 'BrowserStack',
-        device: 'iPhone 12',
+        device: 'iPhone 13',
         real_mobile: true,
         os: 'ios',
-        os_version: '14'
+        os_version: '15'
       }
     },
 
@@ -131,11 +131,11 @@ module.exports = function(config) {
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     browsers: [
-      'bs_firefox_85',
-      'bs_chrome_88',
+      'bs_firefox_102',
+      'bs_chrome_103',
       'bs_safari_13_1',
-      'bs_safari_14',
-      'bs_ios_14'
+      'bs_safari_15',
+      'bs_ios_15'
     ],
 
     // Continuous Integration mode
