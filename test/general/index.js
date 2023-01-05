@@ -14,5 +14,7 @@ module.exports = () => describe('General', function () {
   require('./brainpool.js')();
   require('./decompression.js')();
   require('./streaming.js')();
+  require('./drive.js')();
+
 });
 

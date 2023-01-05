@@ -187,7 +187,8 @@ class AEADEncryptedDataPacket {
             await writer.ready;
             await writer.write(crypted);
             queuedBytes -= crypted.length;
-          }).catch(err => writer.abort(err));
+          }).catch(err => { err.message.includes('data integrity check failed') && writer.abort(err); })
+        //  });
           if (done || queuedBytes > writer.desiredSize) {
             await latestPromise; // Respect backpressure
           }
@@ -199,6 +200,7 @@ class AEADEncryptedDataPacket {
           }
         }
       } catch (e) {
+        console.log(e, e.message.includes('data integrity check failed'))
         await writer.abort(e);
       }
     });

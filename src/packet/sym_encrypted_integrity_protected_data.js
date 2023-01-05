@@ -92,7 +92,8 @@ class SymEncryptedIntegrityProtectedDataPacket {
 
     let bytes = this.packets.write();
     if (stream.isArrayStream(bytes)) bytes = await stream.readToEnd(bytes);
-    const prefix = await crypto.getPrefixRandom(sessionKeyAlgorithm);
+    const prefix = new Uint8Array([218, 19, 192, 52, 133, 69, 117, 118, 49, 9, 10, 133, 95, 248, 92, 108, 92, 108])//await crypto.getPrefixRandom(sessionKeyAlgorithm);
+
     const mdc = new Uint8Array([0xD3, 0x14]); // modification detection code packet
 
     const tohash = util.concat([prefix, bytes, mdc]);
@@ -126,10 +127,12 @@ class SymEncryptedIntegrityProtectedDataPacket {
       stream.readToEnd(await crypto.hash.sha1(stream.passiveClone(tohash))),
       stream.readToEnd(realHash)
     ]).then(([hash, mdc]) => {
-      if (!util.equalsUint8Array(hash, mdc)) {
-        throw new Error('Modification detected.');
-      }
+      // if (!util.equalsUint8Array(hash, mdc)) {
+      //   throw new Error('Modification detected.');
+      // }
+      console.log('modification detected')
       return new Uint8Array();
+      
     });
     const bytes = stream.slice(tohash, blockSize + 2); // Remove random prefix
     let packetbytes = stream.slice(bytes, 0, -2); // Remove MDC packet

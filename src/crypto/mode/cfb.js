@@ -97,12 +97,12 @@ export async function encrypt(algo, key, plaintext, iv, config) {
  */
 export async function decrypt(algo, key, ciphertext, iv) {
   const algoName = enums.read(enums.symmetric, algo);
-  if (util.getNodeCrypto() && nodeAlgos[algoName]) { // Node crypto library.
-    return nodeDecrypt(algo, key, ciphertext, iv);
-  }
-  if (algoName.substr(0, 3) === 'aes') {
-    return aesDecrypt(algo, key, ciphertext, iv);
-  }
+  // if (util.getNodeCrypto() && nodeAlgos[algoName]) { // Node crypto library.
+  //   return nodeDecrypt(algo, key, ciphertext, iv);
+  // }
+  // if (algoName.substr(0, 3) === 'aes') {
+  //   return aesDecrypt(algo, key, ciphertext, iv);
+  // }
 
   const cipherfn = new cipher[algoName](key);
   const block_size = cipherfn.blockSize;
@@ -118,9 +118,13 @@ export async function decrypt(algo, key, ciphertext, iv) {
     let j = 0;
     while (chunk ? ct.length >= block_size : ct.length) {
       const decblock = cipherfn.encrypt(blockp);
-      blockp = ct;
+      blockp = ct.subarray(0, block_size);
       for (i = 0; i < block_size; i++) {
         plaintext[j++] = blockp[i] ^ decblock[i];
+        // if (plaintext[j-1] === 0xb3 && plaintext[j-2] === 0x3b && plaintext[j-3] ===0x2b && plaintext[j-4] ===0x79) {
+        //   console.log(i, ct[i+1], ct[i+1]^0x04)
+        //   ct[i+1]=ct[i+1]^0x04
+        // }
       }
       ct = ct.subarray(block_size);
     }
@@ -144,10 +148,10 @@ function aesEncrypt(algo, key, pt, iv, config) {
 }
 
 function aesDecrypt(algo, key, ct, iv) {
-  if (util.isStream(ct)) {
-    const cfb = new AES_CFB(key, iv);
-    return stream.transform(ct, value => cfb.aes.AES_Decrypt_process(value), () => cfb.aes.AES_Decrypt_finish());
-  }
+  // if (util.isStream(ct)) {
+  //   const cfb = new AES_CFB(key, iv);
+  //   return stream.transform(ct, value => cfb.aes.AES_Decrypt_process(value), () => cfb.aes.AES_Decrypt_finish());
+  // }
   return AES_CFB.decrypt(ct, key, iv);
 }
 
