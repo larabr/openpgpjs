@@ -115,7 +115,7 @@ async function recover(binaryMessage, range, original) {
         flipped[i] = flipped[i] ^ bit;
       }
     }))
-    if (promises.some(Boolean)) return true;
+    if (promises.filter(Boolean).length === 1) return true;
   }
   return false; // no recovery
 }
@@ -144,7 +144,7 @@ module.exports = () => describe('Drive bitflip prevention', function () {
       const bytes = message.packets.write();
       for (let i = 0; i < bytes.length; i++) {
         if (bytes[i] === testData[0] && bytes[i+1] === testData[1] && bytes[i+2] === testData[2] && bytes[i+3] === testData[3]) {
-          // skip prefix
+          // skip random prefix (16 + 2 bytes) that will be prepanded to plaintext before encryption
           return i + 18;
         }
       }
@@ -191,8 +191,8 @@ module.exports = () => describe('Drive bitflip prevention', function () {
       const bytes = message.packets.write();
       for (let i = 0; i < bytes.length; i++) {
         if (bytes[i] === testData[0] && bytes[i+1] === testData[1] && bytes[i+2] === testData[2] && bytes[i+3] === testData[3]) {
-          // skip prefix
-          return i + 18;
+          // skip IV, that will be prepended to ciphertext on serialisation
+          return i + 12;
         }
       }
       throw new Error('start index not found')
