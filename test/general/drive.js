@@ -92,9 +92,11 @@ async function recover(binaryMessage, range, original) {
     console.log(i)
     // eslint-disable-next-line no-loop-func
     const promises = await Promise.all(bits.map(async bit => {
+      // copy message before flipping
+      // can be optimised by using the same array for each 'bit' and "flipping back" the bit after decryption (sharing the array across promises might give concurrency issues...? i.e. multiple bitflips applied in a given promise)
       const flipped = binaryMessage.slice(0);
       flipped[i] = flipped[i] ^ bit;
-      try {
+      // try { // decryption won't throw since integrity check is disabled, for testing
         const res = await openpgp.decrypt({
           message: await openpgp.readMessage({ binaryMessage: flipped }),
           passwords: 'password',
@@ -108,13 +110,15 @@ async function recover(binaryMessage, range, original) {
             console.log(binaryMessage, flipped, res.data)
           }
         }
-      } catch (e) {
-        // console.log(e)
-        // console.log('bit did not work: ', i, bit)
-        // undo bitflip
-        flipped[i] = flipped[i] ^ bit;
-      }
+      // } catch (e) {
+      //   // console.log(e)
+      //   // console.log('bit did not work: ', i, bit)
+      //   // undo bitflip
+      //   console.log('thrown ', e)
+      //   flipped[i] = flipped[i] ^ bit;
+      // }
     }))
+    // exactly one decryption should succeed
     if (promises.filter(Boolean).length === 1) return true;
   }
   return false; // no recovery
