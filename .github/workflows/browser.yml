@@ -1,18 +1,14 @@
 name: Test in browsers
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+
 
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-
   test-browsers-latest:
     runs-on: ubuntu-latest
-    needs: build
     
     steps:
       - uses: actions/checkout@v3
@@ -26,8 +22,8 @@ jobs:
         with:
           path: |
             dist
-            test
-          key: ${{ needs.build.outputs.cache-key }}
+            test/lib
+          key: cache-${{ github.sha }}
         # ignore cache miss, since it was taken care of the `build-tests-full` step and it should never occur here
 
       - name: Install dependencies
@@ -45,7 +41,7 @@ jobs:
       - name: Run browser tests
         run: npm run test-browser
 
-      - name: Run browser tests (lightweight)
+      - name: Run browser tests (lightweight) # overwrite test/lib
         run: |
           npm run build-test --lightweight
           npm run test-browser
@@ -70,8 +66,8 @@ jobs:
         with:
           path: |
             dist
-            test
-          key: ${{ needs.build.outputs.cache-key }}
+            test/lib
+          key: cache-${{ github.sha }}
         # ignore cache miss, since it was taken care of the `build-tests-full` step and it should never occur here
 
       - name: Wait for other Browserstack tests to finish
@@ -84,7 +80,7 @@ jobs:
       - name: Run browserstack tests
         run: npm run test-browserstack
 
-      - name: Run browserstack tests (lightweight)
+      - name: Run browserstack tests (lightweight) # overwrite test/lib
         run: |
           npm run build-test --lightweight
           npm run test-browserstack

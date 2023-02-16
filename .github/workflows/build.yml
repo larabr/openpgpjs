@@ -1,17 +1,16 @@
 # reusable workflow, see
 # https://docs.github.com/en/actions/using-workflows/reusing-workflows#using-outputs-from-a-reusable-workflow
-name: Build and cache
-on: 
-  workflow_call:  # allow this workflow to be called from other workflows
-    outputs:
-      cache-key:
-        description: "Cache key"
-        value: ${{ jobs.build-tests.outputs.cache-key }}
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
 jobs:
   build-tests: # cache both dist and tests (non-lightweight only), based on commit hash
     runs-on: ubuntu-latest
-    outputs:
-      cache-key: cache-${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -21,7 +20,7 @@ jobs:
         with:
           path: |
             dist
-            test
+            test/lib
           key: cache-${{ github.sha }}
       - name: Build dist and tests
         if: steps.cache-full.outputs.cache-hit != 'true'

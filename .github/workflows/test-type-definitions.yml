@@ -1,19 +1,14 @@
 name: Types
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
 
 jobs:
-  build:
-    uses: ./.github/workflows/build.yml
-
-  lint:
+  types:
     name: Test type definitions
     runs-on: ubuntu-latest
-    needs: build
 
     steps:
     - uses: actions/checkout@v3
@@ -22,10 +17,8 @@ jobs:
       uses: actions/cache/restore@v3
       id: cache-full
       with:
-        path: |
-          dist
-          test
-        key: ${{ needs.build.outputs.cache-key }}
+        path: dist
+        key: cache-${{ github.sha }}
         # ignore cache miss, since it was taken care of the `build-tests-full` step and it should never occur here
 
     - run: npm ci --ignore-scripts
