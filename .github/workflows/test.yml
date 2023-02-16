@@ -10,8 +10,6 @@ jobs:
   build: # cache both dist and tests (non-lightweight only), based on commit hash
     name: Build
     runs-on: ubuntu-latest
-    outputs:
-      cache-key: cache-${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -52,7 +50,7 @@ jobs:
         path: |
           dist
           test/lib
-        key: ${{ needs.build.outputs.cache-key }}
+        key: cache-${{ github.sha }}
         # ignore cache miss, since it was taken care of the `build` step and it should never occur here
     - run: npm test
 
@@ -72,7 +70,7 @@ jobs:
           path: |
             dist
             test/lib
-          key: ${{ needs.build.outputs.cache-key }}
+          key: cache-${{ github.sha }}
 
       - name: Install dependencies
         # cannot use `--ignore-scripts` since playwright seems to use it to set ENV vars
@@ -128,7 +126,7 @@ jobs:
           path: |
             dist
             test/lib
-          key: ${{ needs.build.outputs.cache-key }}
+          key: cache-${{ github.sha }}
 
       - name: Wait for other Browserstack tests to finish
         uses: softprops/turnstyle@v1
@@ -163,7 +161,7 @@ jobs:
         path: |
           dist
           test/lib
-        key: ${{ needs.build.outputs.cache-key }}
+        key: cache-${{ github.sha }}
     - run: npm run test-type-definitions
 
   lint:
@@ -182,5 +180,5 @@ jobs:
         path: |
           dist
           test/lib
-        key: ${{ needs.build.outputs.cache-key }}
+        key: cache-${{ github.sha }}
     - run: npm run lint
