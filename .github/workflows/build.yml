@@ -11,7 +11,7 @@ jobs:
   build-tests: # cache both dist and tests (non-lightweight only), based on commit hash
     runs-on: ubuntu-latest
     outputs:
-      cache-key: cache-${GITHUB_SHA}
+      cache-key: cache-${{ github.sha }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -22,7 +22,7 @@ jobs:
           path: |
             dist
             test
-          key: cache-$GITHUB_SHA
+          key: cache-${{ github.sha }}
       - name: Build dist and tests
         if: steps.cache-full.outputs.cache-hit != 'true'
         run: |
