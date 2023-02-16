@@ -94,7 +94,9 @@ jobs:
         run: |
           npx playwright install-deps chrome
           npx playwright install-deps firefox
-          npx playwright install-deps webkit
+
+      - name: Install WebKit # caching not possible, external shared libraries required
+        run: npx playwright install-deps webkit
 
       - name: Run browser tests
         run: npm run test-browser
