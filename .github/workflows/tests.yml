@@ -1,31 +1,17 @@
-name: Test
+name: Code Tests
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_run:
+    # Runs triggered by the workflow_run event always use the default branch for the repository,
+    # and have access to a read/write token as well as secrets.
+    # This is needed only for browserstack secrets, but we put all the build-related test jobs here for simplicitly
+    workflows: [Build]
+    types: [completed]
 
 jobs:
-  build: # cache both dist and tests (non-lightweight only), based on commit hash
-    name: Build
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-      - name: Check for cached folders
-        id: cache-full
-        uses: actions/cache@v3
-        with:
-          path: |
-            dist
-            test/lib
-          key: cache-${{ github.sha }}
-      - name: Build dist and tests
-        if: steps.cache-full.outputs.cache-hit != 'true'
-        run: |
-          npm ci
-          npm run build-test
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
   node:
     strategy:
