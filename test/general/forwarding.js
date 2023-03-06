@@ -3,32 +3,28 @@ const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp
 const expect = require('chai').expect;
 
 const charlieKeyArmored = `-----BEGIN PGP PRIVATE KEY BLOCK-----
-Version: OpenPGP.js v4.10.4
-Comment: https://openpgpjs.org
 
-xVgEXqG7KRYJKwYBBAHaRw8BAQdA/q4cs9Pwms3R4trjUd7YyrsRYdQHC9wI
-MqLdefob4KUAAQDfy9e8qleM+a1EnPCjDpm69FIY769mo/dpwYlkuI2T/RQt
-zSlCb2IgKEZvcndhcmRlZCB0byBDaGFybGllKSA8aW5mb0Bib2IuY29tPsJ4
-BBAWCgAgBQJeobspBgsJBwgDAgQVCAoCBBYCAQACGQECGwMCHgEACgkQN2cz
-+W7U/RnS8AEArtRly8vW6uUSng9EJ0iuIwJpwgZfykSLl/t4u3HTBZ4BALzY
-3XsnvKtZZVvaKvFvCUu/2NvC/1yw2wJk9wGbCwEOx3YEXqG7KRIKKwYBBAGX
-VQEFAQEHQCGxSJahhDUdTKnlqT3UIn3rXn5i47I4MsG4kSWfTwcOHAIIBwPe
-7fJ+kOrMea9aIUeYtGpUzABa9gMBCAcAAP95QjbjU7kyugp39vhi60YW5T8p
-Me0kKFCWzmSYzstgGBBbwmEEGBYIAAkFAl6huykCGwwACgkQN2cz+W7U/RkP
-WQD+KcU1HKn6PkVJKxg6RS0Q7RcCZwaQ1DyEyjUoneMCRAgA/jUl9uvPAoCS
-3+4Wqg9Q//zOwXNImimIPIdpWNXYZJID
-=FVvG
+xVgEY/ikABYJKwYBBAHaRw8BAQdAzz/nPfhJnoAYwg43AFYzxX1v6UwGmfN9jPiI
+/MOFxFgAAQDTqvO94jZPb9brhpwayNI9QlqqTlvDP6AH8CpXUfoVmxDczRNib2Ig
+PGJvYkBwcm90b24ubWU+wooEExYIADwFAmP4pAAJkIdp9lyYAlNMFiEEzW5s1IvY
+GXCwcJkZh2n2XJgCU0wCGwMCHgECGQECCwcCFQgCFgACIgEAAPmGAQDxysrSwxQO
+27X/eg7xSE5JVXT7bt8cEZOE+iC2IDS02QEA2CvXnZJK4AOmPsFWKzn3HkFxCybc
+CefzoJe0Pp4QNwPHcQRj+KQAEgorBgEEAZdVAQUBAQdArC6ijiQbE4ddGzqYHuq3
+0rV05YYDP+5GtCecalGVizUX/woJzG7AoQ/hzzDi4rf+is90WDIIeHwAAP9JzVrf
+QzMRicxCz1PbXNRW/OwKHg0X0bH3MA5A/j3mcBCrwngEGBYIACoFAmP4pAAJkIdp
+9lyYAlNMFiEEzW5s1IvYGXCwcJkZh2n2XJgCU0wCG1AAAN0hAP9kJ/CQDBAwrVj5
+92/mkV/4bEWAql/jEEfbBTAGHEb+5wD/ca5jm4FThIaGNO/mLtbkodfR0RTQ5usZ
+Xvoo9PdnBQg=
+=7A/f
 -----END PGP PRIVATE KEY BLOCK-----`;
 
 const fwdCiphertextArmored = `-----BEGIN PGP MESSAGE-----
-Version: OpenPGP.js v4.10.4
-Comment: https://openpgpjs.org
 
-wV4Dog8LAQLriGUSAQdA/I6k0IvGxyNG2SdSDHrv3bZQDWH18OhTWkcmSF0M
-Bxcw3w8KMjr2v69ro5cyZztymEXi5RemRx+oPZGKIZ9N5T+26TaOltH7h8eR
-Mu4H03Lp0k4BRsjpFNUBL3HsAuMIemNf4369g+szlpuzjNE1KQhQzZbh87AU
-T7KAKygwz0EpOWpx2RHtshDy/bZ1EC8Ia4qDAebameIqCU929OmY1uI=
-=3iIr
+wV4Dwkk3ytpHrqASAQdAzPWbm24Uj6OYSDaauOuFMRPPLr5zWKXgvC1eHPD78ykw
+YkvxNCwD6hfzjLoASVv9jhHJoXY+Pag6QHvoFuMn+hdG90yFh5HMFyileY/CTrT7
+0kcBAPalcAq/OH/pBtIhGT/TKS88IIkz2aSukjbQRf+JNyh7bF+uXVDGmD8zOGa8
+mM9TmGOf8Vi3sjgVAQ5rZQzh36HrBDloBA==
+=PotS
 -----END PGP MESSAGE-----`;
 
 module.exports = () => describe('Forwarding', function() {

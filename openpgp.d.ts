@@ -869,6 +869,7 @@ export namespace enums {
     encryptStorage = 8,
     splitPrivateKey = 16,
     authentication = 32,
+    forwardedCommunication = 64,
     sharedPrivateKey = 128,
   }
 
