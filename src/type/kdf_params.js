@@ -27,7 +27,6 @@
  * @private
  */
 import util from '../util';
-import enums from '../enums';
 
 const VERSION_FORWARDING = 0xFF;
 
