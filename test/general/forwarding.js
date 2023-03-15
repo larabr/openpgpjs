@@ -44,4 +44,12 @@ module.exports = () => describe('Forwarding', function() {
 
     expect(result.data).to.equal('Message for Bob');
   });
+
+  it('supports serialising key with KDF params for forwarding', async function() {
+    const charlieKey = await openpgp.readKey({ armoredKey: charlieKeyArmored });
+
+    const serializedKey = charlieKey.write();
+    const { data: expectedSerializedKey } = await openpgp.unarmor(charlieKeyArmored);
+    expect(serializedKey).to.deep.equal(expectedSerializedKey);
+  });
 });

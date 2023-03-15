@@ -239,31 +239,31 @@ module.exports = () => describe('ECDH key exchange @lightweight', function () {
       });
     });
   });
-});
 
-describe('KDF parameters', function () {
-  const fingerprint = new Uint8Array([
-    177, 183, 116, 123, 76, 133, 245, 212, 151, 243,
-    236, 71, 245, 86, 3, 168, 101, 74, 209, 105
-  ]);
+  describe('KDF parameters', function () {
+    const fingerprint = new Uint8Array([
+      177, 183, 116, 123, 76, 133, 245, 212, 151, 243,
+      236, 71, 245, 86, 3, 168, 101, 74, 209, 105
+    ]);
 
-  it('Valid serialization', async function () {
-    const cipher = openpgp.enums.symmetric.aes256;
-    const hash = openpgp.enums.hash.sha256;
+    it('Valid serialization', async function () {
+      const cipher = openpgp.enums.symmetric.aes256;
+      const hash = openpgp.enums.hash.sha256;
 
-    const v1 = new KDFParams({ cipher, hash });
-    const v1Copy = new KDFParams({});
-    v1Copy.read(v1.write());
-    expect(v1Copy).to.deep.equal(v1);
+      const v1 = new KDFParams({ cipher, hash });
+      const v1Copy = new KDFParams({});
+      v1Copy.read(v1.write());
+      expect(v1Copy).to.deep.equal(v1);
 
-    const forwardingFlags = new KDFParams({
-      cipher,
-      hash,
-      version: 0xFF,
-      replacementFingerprint: fingerprint
+      const forwardingFlags = new KDFParams({
+        cipher,
+        hash,
+        version: 0xFF,
+        replacementFingerprint: fingerprint
+      });
+      const forwardingFlagsCopy = new KDFParams();
+      forwardingFlagsCopy.read(forwardingFlags.write());
+      expect(forwardingFlagsCopy).to.deep.equal(forwardingFlags);
     });
-    const forwardingFlagsCopy = new KDFParams();
-    forwardingFlagsCopy.read(forwardingFlags.write());
-    expect(forwardingFlagsCopy).to.deep.equal(forwardingFlags);
   });
 });
