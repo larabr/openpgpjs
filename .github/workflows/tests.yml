@@ -106,7 +106,9 @@ jobs:
           cachain:  'ca-chain.pem'
 
       - name: Run browser tests
-        run: npm run test-browser
+        run: |
+          ls -l
+          npm run test-browser
 
       - name: Run browser tests (lightweight) # overwrite test/lib
         run: |
