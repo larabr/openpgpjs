@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+const fs = require('fs');
 const { chromium, firefox, webkit } = require('playwright');
 
 process.env.CHROME_BIN = chromium.executablePath();
@@ -13,6 +14,12 @@ module.exports = function(config) {
 
     // hostname for local
     hostname: '127.0.0.1',
+    protocol: 'https:',
+    httpsServerOptions: {
+      key: fs.readFileSync('./127.0.0.1-key.pem', 'utf8'),
+      cert: fs.readFileSync('./127.0.0.1.pem', 'utf8')
+    },
+    proxyValidateSSL: false,
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter

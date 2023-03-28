@@ -98,6 +98,13 @@ jobs:
       - name: Install WebKit # caching not possible, external shared libraries required
         run: npx playwright install-deps webkit
 
+      - name: Generate self-signed HTTPS certificates for karma server
+        uses: kofemann/action-create-certificate@v0.0.4
+        with:
+          hostcert: '127.0.0.1.pem'
+          hostkey:  '127.0.0.1-key.pem'
+          cachain:  'ca-chain.pem'
+
       - name: Run browser tests
         run: npm run test-browser
 
@@ -129,6 +136,13 @@ jobs:
             dist
             test/lib
           key: cache-${{ github.sha }}
+
+      - name: Generate self-signed HTTPS certificates for karma server
+        uses: kofemann/action-create-certificate@v0.0.4
+        with:
+          hostcert: '127.0.0.1.pem'
+          hostkey:  '127.0.0.1-key.pem'
+          cachain:  'ca-chain.pem'
 
       - name: Wait for other Browserstack tests to finish
         uses: softprops/turnstyle@v1
