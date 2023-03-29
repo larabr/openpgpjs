@@ -155,7 +155,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run browserstack tests
-        run: npm run test-browserstack
+        run: |
+          sudo chown runner:docker *.pem
+          npm run test-browserstack
 
       - name: Run browserstack tests (lightweight) # overwrite test/lib
         run: |
