@@ -107,6 +107,7 @@ jobs:
 
       - name: Run browser tests
         run: |
+          chown runner:docker *.pem
           ls -l
           npm run test-browser
 
