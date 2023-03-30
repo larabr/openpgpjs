@@ -98,7 +98,8 @@ module.exports = function(config) {
       name: process.env.GITHUB_WORKFLOW,
       project: `openpgpjs/${process.env.GITHUB_EVENT_NAME || 'push'}${process.env.LIGHTWEIGHT ? '/lightweight' : ''}`,
       timeout: 450,
-      acceptSslCerts: true
+      acceptSslCerts: true,
+      acceptInsecureCerts: true
     },
 
     // define browsers
