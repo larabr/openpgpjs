@@ -57,6 +57,7 @@ jobs:
   test-browsers-compatibility:
     name: Browsers (older, on Browserstack)
     runs-on: ubuntu-latest
+    needs: build
     # needs: test-browsers-latest
     env: # credentials need hardcoding for now since Github secrets aren't accessible on pull requests from forks
       BROWSERSTACK_USERNAME: openpgpjs_PlY4Uq885CQ
