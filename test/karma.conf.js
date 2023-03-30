@@ -13,7 +13,7 @@ module.exports = function(config) {
     basePath: '..',
 
     // hostname for local
-    hostname: '127.0.0.1',
+    hostname: 'bs-local.com',
     protocol: 'https:',
     httpsServerOptions: {
       key: fs.readFileSync('./127.0.0.1-key.pem', 'utf8'),
