@@ -99,7 +99,7 @@ module.exports = function(config) {
       project: `openpgpjs/${process.env.GITHUB_EVENT_NAME || 'push'}${process.env.LIGHTWEIGHT ? '/lightweight' : ''}`,
       timeout: 450,
       acceptSslCerts: true,
-      acceptInsecureCerts: true
+      networkLogs: true
     },
 
     // define browsers
