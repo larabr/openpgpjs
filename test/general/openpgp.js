@@ -2933,7 +2933,7 @@ XfA3pqV4mTzF
             throw new Error('Was not able to successfully modify checksum');
           }
           const badBodyEncrypted = data.replace(/\n=([a-zA-Z0-9/+]{4})/, 'aaa\n=$1');
-          loadStreamsPolyfill();
+          await loadStreamsPolyfill();
           try {
             for (const allowStreaming of [true, false]) {
               openpgp.config.allowUnauthenticatedStream = allowStreaming;
@@ -3198,7 +3198,7 @@ XfA3pqV4mTzF
             const plaintext = [];
             let i = 0;
             const useNativeStream = (() => { try { new global.ReadableStream(); return true; } catch (e) { return false; } })(); // eslint-disable-line no-new
-            loadStreamsPolyfill();
+            await loadStreamsPolyfill();
             const ReadableStream = useNativeStream ? global.ReadableStream : stream.ReadableStream;
             const data = new ReadableStream({
               pull(controller) {

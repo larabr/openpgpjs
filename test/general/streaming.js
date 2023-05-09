@@ -957,7 +957,7 @@ module.exports = () => describe('Streaming', function() {
       passphrase: 'hello world'
     });
 
-    loadStreamsPolyfill();
+    await loadStreamsPolyfill();
   });
 
   beforeEach(function() {

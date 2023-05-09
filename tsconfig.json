@@ -3,6 +3,9 @@
     "./build/"
   ],
   "compilerOptions": {
-    "strict": true
+    "strict": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "allowJs": true
   }
 }
