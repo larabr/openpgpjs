@@ -53,15 +53,6 @@ class KDFParams {
     }
   }
 
-  getReplacementParams() {
-    if (this.version === VERSION_FORWARDING) {
-      return util.concatUint8Array([
-        new Uint8Array([this.hash, this.cipher]),
-        this.replacementFingerprint
-      ]);
-    }
-  }
-
   /**
    * Read KDFParams from an Uint8Array
    * @param {Uint8Array} input - Where to read the KDFParams from
