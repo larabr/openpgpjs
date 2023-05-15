@@ -921,6 +921,7 @@ interface KDFParamsData {
   cipher: enums.symmetric;
   replacementFingerprint?: Uint8Array;
 }
+
 export class KDFParams {
   constructor(data: KDFParamsData);
   write(forReplacementParams?: boolean): Uint8Array;
