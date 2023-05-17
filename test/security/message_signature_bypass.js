@@ -3,7 +3,7 @@ import chaiAsPromised from 'chai-as-promised';
 chaiUse(chaiAsPromised);
 
 const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : await import('openpgp');
-import util from '../../src/util';
+import util from '../../src/util.js';
 
 const { readKey, readCleartextMessage, SignaturePacket } = openpgp;
 

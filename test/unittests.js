@@ -29,10 +29,13 @@ globalThis.tryTests = function(name, tests, options) {
 };
 
 globalThis.loadStreamsPolyfill = function() {
-  return import('web-streams-polyfill/es2018'); // eslint-disable-line import/no-unassigned-import
+  return import('web-streams-polyfill');
 };
-import runSecurityTests from './security';
+
+import runWorkerTests from './worker';
+import runCryptoTests from './crypto';
 import runGeneralTests from './general';
+import runSecurityTests from './security';
 
 describe('Unit Tests', function () {
 
@@ -63,10 +66,8 @@ describe('Unit Tests', function () {
     });
   }
 
-  // require('./worker')();
-  // require('./crypto')();
-  // require('./general')();
-  // require('./security')();
-  runGeneralTests()
-  runSecurityTests()
+  runWorkerTests();
+  runCryptoTests();
+  runGeneralTests();
+  runSecurityTests();
 });

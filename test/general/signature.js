@@ -1,14 +1,15 @@
 /* eslint-disable max-lines */
 /* globals tryTests, loadStreamsPolyfill */
-const stream = require('@openpgp/web-stream-tools');
-const { use: chaiUse, expect } = require('chai');
-chaiUse(require('chai-as-promised'));
+import * as stream from '@openpgp/web-stream-tools';
+import { use as chaiUse, expect } from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+chaiUse(chaiAsPromised);
 
-const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : require('../..');
+const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : await import('openpgp');
 
-const util = require('../../src/util');
+import util from '../../src/util.js';
 
-module.exports = () => describe('Signature', function() {
+export default () => describe('Signature', function() {
   const priv_key_arm1 =
     ['-----BEGIN PGP PRIVATE KEY BLOCK-----',
       'Version: GnuPG v1.4.11 (GNU/Linux)',

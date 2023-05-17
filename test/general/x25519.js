@@ -1,10 +1,7 @@
 import { use as chaiUse, expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chaiUse(chaiAsPromised);
-// console.log('aaa')
-// import { createRequire } from 'module';
-// global.require = createRequire(import.meta.url);
-// console.log(require)
+
 const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : await import('openpgp');
 
 import nacl from '@openpgp/tweetnacl';

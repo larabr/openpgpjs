@@ -77,8 +77,8 @@ export default Object.assign([
     inlineDynamicImports: true,
     external: nodeBuiltinModules.concat(nodeDependencies),
     output: [
-      { file: 'dist/node/openpgp.js', format: 'cjs', name: pkg.name, banner, intro },
-      { file: 'dist/node/openpgp.min.js', format: 'cjs', name: pkg.name, banner, intro, plugins: [terser(terserOptions)], sourcemap: true },
+      { file: 'dist/node/openpgp.cjs', format: 'cjs', name: pkg.name, banner, intro },
+      { file: 'dist/node/openpgp.min.cjs', format: 'cjs', name: pkg.name, banner, intro, plugins: [terser(terserOptions)], sourcemap: true },
       { file: 'dist/node/openpgp.mjs', format: 'es', banner, intro },
       { file: 'dist/node/openpgp.min.mjs', format: 'es', banner, intro, plugins: [terser(terserOptions)], sourcemap: true }
     ],
