@@ -1,11 +1,12 @@
 {
-  "exclude": [
-    "./build/"
-  ],
   "compilerOptions": {
     "strict": true,
+    "target": "es2021",
     "module": "esnext",
     "moduleResolution": "node",
     "allowJs": true
-  }
+  },
+  "exclude": [
+    "./build/"
+  ]
 }

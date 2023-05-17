@@ -6,9 +6,8 @@ import alias from '@rollup/plugin-alias';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import replace from '@rollup/plugin-replace';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import { wasm } from '@rollup/plugin-wasm';
-
 
 import pkg from './package.json';
 
@@ -132,7 +131,8 @@ export default Object.assign([
         browser: true
       }),
       commonjs({
-        ignore: nodeBuiltinModules.concat(nodeDependencies)
+        ignore: nodeBuiltinModules.concat(nodeDependencies),
+        requireReturnsDefault: 'preferred'
       }),
       replace({
         "import { createRequire } from 'module';": 'const createRequire = () => () => {}',
