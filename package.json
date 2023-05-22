@@ -20,7 +20,10 @@
       "require": "./dist/node/openpgp.min.cjs",
       "browser": "./dist/openpgp.min.mjs"
     },
-    "./lightweight": "./lightweight"
+    "./lightweight": {
+      "types": "../openpgp.d.ts",
+      "browser": "./dist/lightweight/openpgp.min.mjs"
+    }
   },
   "types": "openpgp.d.ts",
   "type": "module",
