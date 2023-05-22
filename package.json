@@ -14,9 +14,13 @@
     "openpgp"
   ],
   "exports": {
-    "import": "./dist/node/openpgp.mjs",
-    "require": "./dist/node/openpgp.min.js",
-    "browser": "./dist/openpgp.min.mjs"
+    ".": {
+      "types": "./openpgp.d.ts",
+      "import": "./dist/node/openpgp.mjs",
+      "require": "./dist/node/openpgp.min.cjs",
+      "browser": "./dist/openpgp.min.mjs"
+    },
+    "./lightweight": "./lightweight"
   },
   "types": "openpgp.d.ts",
   "type": "module",
@@ -33,7 +37,7 @@
     "build-test": "npm run build --build-only=test",
     "prepare": "npm run build",
     "test": "mocha --timeout 120000 test/unittests.js",
-    "test-type-definitions": "tsc test/typescript/definitions.ts && node test/typescript/definitions.js",
+    "test-type-definitions": "ts-node --esm test/typescript/definitions.ts",
     "benchmark-time": "node test/benchmarks/time.js",
     "benchmark-memory-usage": "node test/benchmarks/memory_usage.js",
     "start": "http-server",
@@ -55,7 +59,7 @@
     "@openpgp/pako": "^1.0.12",
     "@openpgp/seek-bzip": "^1.0.5-git",
     "@openpgp/tweetnacl": "^1.0.3",
-    "@openpgp/web-stream-tools": "larabr/web-stream-tools#0fe68487b92e5680aa1cae27ba3df9e01d1e7851",
+    "@openpgp/web-stream-tools": "git+https://git@github.com/larabr/web-stream-tools#7c971d0e0ea7d23ab5a314805bd154d421195bbb",
     "@rollup/plugin-alias": "^5.0.0",
     "@rollup/plugin-commonjs": "^24.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",

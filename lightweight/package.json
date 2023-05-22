@@ -1,5 +1,7 @@
 {
   "name": "openpgp-lightweight",
-  "main": "../dist/lightweight/openpgp.min.mjs",
-  "types": "../openpgp.d.ts"
+  "exports": {
+    "types": "../openpgp.d.ts",
+    "browser": "./dist/lightweight/openpgp.min.mjs"
+  }
 }
