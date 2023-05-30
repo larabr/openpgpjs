@@ -47,22 +47,24 @@ async function OMAC(key) {
 }
 
 async function CTR(key) {
-  if (
-    util.getWebCrypto() &&
-    key.length !== 24 // WebCrypto (no 192 bit support) see: https://www.chromium.org/blink/webcrypto#TOC-AES-support
-  ) {
-    key = await webCrypto.importKey('raw', key, { name: 'AES-CTR', length: key.length * 8 }, false, ['encrypt']);
-    return async function(pt, iv) {
-      const ct = await webCrypto.encrypt({ name: 'AES-CTR', counter: iv, length: blockLength * 8 }, key, pt);
-      return new Uint8Array(ct);
-    };
-  }
   if (util.getNodeCrypto()) { // Node crypto library
     return async function(pt, iv) {
       const en = new nodeCrypto.createCipheriv('aes-' + (key.length * 8) + '-ctr', key, iv);
       const ct = Buffer.concat([en.update(pt), en.final()]);
       return new Uint8Array(ct);
     };
+  }
+  try {
+    if (util.getWebCrypto()) {
+      const keyRef = await webCrypto.importKey('raw', key, { name: 'AES-CTR', length: key.length * 8 }, false, ['encrypt']);
+      return async function(pt, iv) {
+        const ct = await webCrypto.encrypt({ name: 'AES-CTR', counter: iv, length: blockLength * 8 }, keyRef, pt);
+        return new Uint8Array(ct);
+      };
+    }
+  } catch (err) {
+    // no 192 bit support in Chromium, see: https://www.chromium.org/blink/webcrypto#TOC-AES-support
+    if (err.name !== 'OperationError') throw err;
   }
   // asm.js fallback
   return async function(pt, iv) {

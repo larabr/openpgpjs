@@ -72,19 +72,24 @@ export default async function CMAC(key) {
 }
 
 async function CBC(key) {
-  if (util.getWebCrypto() && key.length !== 24) { // WebCrypto (no 192 bit support) see: https://www.chromium.org/blink/webcrypto#TOC-AES-support
-    key = await webCrypto.importKey('raw', key, { name: 'AES-CBC', length: key.length * 8 }, false, ['encrypt']);
-    return async function(pt) {
-      const ct = await webCrypto.encrypt({ name: 'AES-CBC', iv: zeroBlock, length: blockLength * 8 }, key, pt);
-      return new Uint8Array(ct).subarray(0, ct.byteLength - blockLength);
-    };
-  }
   if (util.getNodeCrypto()) { // Node crypto library
     return async function(pt) {
       const en = new nodeCrypto.createCipheriv('aes-' + (key.length * 8) + '-cbc', key, zeroBlock);
       const ct = en.update(pt);
       return new Uint8Array(ct);
     };
+  }
+  try {
+    if (util.getWebCrypto()) {
+      key = await webCrypto.importKey('raw', key, { name: 'AES-CBC', length: key.length * 8 }, false, ['encrypt']);
+      return async function(pt) {
+        const ct = await webCrypto.encrypt({ name: 'AES-CBC', iv: zeroBlock, length: blockLength * 8 }, key, pt);
+        return new Uint8Array(ct).subarray(0, ct.byteLength - blockLength);
+      };
+    }
+  } catch (err) {
+    // no 192 bit support in Chromium, see: https://www.chromium.org/blink/webcrypto#TOC-AES-support
+    if (err.name !== 'OperationError') throw err;
   }
   // asm.js fallback
   return async function(pt) {
