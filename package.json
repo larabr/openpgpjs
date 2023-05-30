@@ -56,9 +56,10 @@
     "postversion": "git push && git push --tags && npm publish"
   },
   "devDependencies": {
-    "@openpgp/asmcrypto.js": "^2.3.2",
+    "@openpgp/asmcrypto.js": "git+https://git@github.com/openpgpjs/asmcrypto.js#a4d7bb2ab9c28d02f8ff479c0888f98c68753e98",
     "@openpgp/elliptic": "^6.5.1",
     "@openpgp/jsdoc": "^3.6.4",
+    "@openpgp/noble-hashes": "git+https://git@github.com/larabr/noble-hashes.git#d3f0561cba0efd368601500ddde9519eed225003",
     "@openpgp/pako": "^1.0.12",
     "@openpgp/seek-bzip": "^1.0.5-git",
     "@openpgp/tweetnacl": "^1.0.3",
