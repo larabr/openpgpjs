@@ -1,4 +1,4 @@
-import sandbox from 'sinon/lib/sinon/sandbox';
+import sinon from 'sinon';
 import { use as chaiUse, expect } from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 chaiUse(chaiAsPromised);
@@ -15,7 +15,7 @@ export default () => describe('basic RSA cryptography', function () {
   let getNodeCryptoStub;
 
   beforeEach(function () {
-    sinonSandbox = sandbox.create();
+    sinonSandbox = sinon.createSandbox();
     enableNative();
   });
 
