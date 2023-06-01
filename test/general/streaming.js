@@ -226,6 +226,7 @@ function tests() {
     dataArrived();
     reader.releaseLock();
     await stream.cancel(encrypted);
+    await new Promise(resolve => { setTimeout(resolve); }); // TODO temporary fix
     expect(canceled).to.be.true;
   });
 
