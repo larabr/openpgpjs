@@ -1,10 +1,8 @@
 import { use as chaiUse, expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised'; // eslint-disable-line import/newline-after-import
 chaiUse(chaiAsPromised);
 
-const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : await import('openpgp');
-import sinon from 'sinon';
-import * as stream from '@openpgp/web-stream-tools';
+import openpgp from '../initOpenpgp.js';
 import crypto from '../../src/crypto';
 import util from '../../src/util.js';
 

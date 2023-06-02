@@ -2,10 +2,10 @@
 import * as stream from '@openpgp/web-stream-tools';
 import sinon from 'sinon';
 import { use as chaiUse, expect } from 'chai';
-import chaiAsPromised from 'chai-as-promised';
+import chaiAsPromised from 'chai-as-promised'; // eslint-disable-line import/newline-after-import
 chaiUse(chaiAsPromised);
 
-const openpgp = typeof window !== 'undefined' && window.openpgp ? window.openpgp : await import('openpgp');
+import openpgp from '../initOpenpgp.js';
 import crypto from '../../src/crypto';
 import util from '../../src/util.js';
 
@@ -181,7 +181,7 @@ export default () => describe('Packet', function() {
     }
   });
 
-  function cryptStub(webCrypto, method) {
+  function stubWebCrypto(webCrypto, method) {
     const crypt = webCrypto[method];
     const cryptStub = sinon.stub(webCrypto, method);
     let cryptCallsActive = 0;
@@ -204,8 +204,8 @@ export default () => describe('Packet', function() {
   it('Sym. encrypted AEAD protected packet is encrypted in parallel (AEAD, GCM)', async function() {
     const webCrypto = util.getWebCrypto();
     if (!webCrypto || util.getNodeCrypto()) return;
-    const encryptStub = cryptStub(webCrypto, 'encrypt');
-    const decryptStub = cryptStub(webCrypto, 'decrypt');
+    const encryptStub = stubWebCrypto(webCrypto, 'encrypt');
+    const decryptStub = stubWebCrypto(webCrypto, 'decrypt');
 
     const testText = input.createSomeMessage();
 
