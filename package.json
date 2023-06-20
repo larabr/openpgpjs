@@ -56,6 +56,7 @@
     "postversion": "git push && git push --tags && npm publish"
   },
   "devDependencies": {
+    "asmcrypto.js": "git+https://git@github.com/openpgpjs/asmcrypto.js#c72492f4a66e17a0e5dd8ad7874de354f3ccdaa5",
     "@openpgp/asmcrypto.js": "git+https://git@github.com/openpgpjs/asmcrypto.js#a4d7bb2ab9c28d02f8ff479c0888f98c68753e98",
     "@openpgp/elliptic": "^6.5.1",
     "@openpgp/jsdoc": "^3.6.4",

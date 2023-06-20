@@ -26,3 +26,8 @@ export * from './encoding/armor';
 export { default as enums } from './enums';
 
 export { default as config } from './config/config';
+
+import { Sha256 as asmHash } from 'asmcrypto.js/dist_es8/hash/sha256/sha256'
+export {asmHash};
+
+export { default as hash } from './crypto/hash';

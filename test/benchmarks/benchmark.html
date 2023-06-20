@@ -1,0 +1,591 @@
+<html>
+<body>
+<script src="../../node_modules/lodash/lodash.min.js"></script>
+<script src="../../node_modules/platform/platform.js"></script>
+<script src="../../node_modules/benchmark/benchmark.js"></script>
+<script src="../../node_modules/web-streams-polyfill/dist/polyfill.min.js"></script>
+<script src="../../dist/openpgp.js"></script>
+<script>
+console.log('running...');
+openpgp.config.asmcrypto = false
+const wrapAsync = (asmcryptoFlag, func) => ({
+  fn: async deferred => {
+    openpgp.config.asmcrypto = asmcryptoFlag;
+    await func().catch(onError);
+    openpgp.config.asmcrypto = false
+    deferred.resolve();
+  },
+  defer: true
+});
+const onError = err => {
+  // eslint-disable-next-line no-console
+  console.error('The time benchmark tests failed by throwing the following error:');
+  // eslint-disable-next-line no-console
+  console.error(err);
+  // eslint-disable-next-line no-process-exit
+  // process.exit(1);
+};
+
+function assertTrue(value) { if (value !== true) throw new Error(`Expected ${value} to be true`) }
+
+const streamFromGenerator = it => new ReadableStream({
+  pull: (controller) => {
+    const { value, done } = it.next();
+    if (done) {
+        controller.close();
+    } else {
+        controller.enqueue(value);
+    }
+  }
+});
+function* largeDataGenerator({ chunk, numberOfChunks }) {
+  for (let chunkNumber = 0; chunkNumber < numberOfChunks; chunkNumber++) {
+    yield chunk;
+  }
+}
+const ONE_MEGABYTE = 100;
+
+const suite = new Benchmark.Suite();
+
+const addComparison = (message, getFn) => {
+  suite.add(message, getFn(false))
+  suite.add(`${message} (asmcrypto)`, getFn(true))
+}
+
+function asmcryptoHash(hash, webCryptoHash) {
+  return async (data) => hash.bytes(data)
+
+}
+openpgp.config.minBytesForWebCrypto=10000000
+function nobleHash(hash, webCryptoHash) {
+  return async function(data, config = defaultConfig) {
+      return hash(data);
+  };
+}
+
+[100, 1000, 2000, 10000].forEach(size => {
+  suite.add(`sha256 noble ${size}B`, wrapAsync(false, async () => { // todo benchmark asmcrypto
+
+// console.log(openpgp.config.minBytesForWebCrypto)
+//  sha256 vs webcrypto
+    // const hashInstace = nobleHash(openpgp.hash.sha256, 'SHA-256');
+    const res = await openpgp.hash.sha256(new Uint8Array(size), openpgp.config);
+    // if (b===1){b=0; console.log(res)}
+
+}));
+suite.add(`sha256 asmcrypto ${size}B`, wrapAsync(false, async () => { // todo benchmark asmcrypto
+//  sha256 vs webcrypto
+    const hashInstace = asmcryptoHash(openpgp.asmHash, 'SHA-256');
+    const res = await hashInstace(new Uint8Array(size), openpgp.config);
+    // if (a===1){a=0; console.log(res)}
+}));
+suite.add(`sha256 webcrypto ${size}B`,  wrapAsync(false, async () => { // todo benchmark asmcrypto
+//  sha256 vs webcrypto
+    const res = new Uint8Array(await crypto.subtle.digest("SHA-256", new Uint8Array(size)));
+}));
+
+})
+
+addComparison('openpgp.sign "hello" ECC p256', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+// console.log(openpgp.config.minBytesForWebCrypto)
+  const key = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xXcEZJF0dBMIKoZIzj0DAQcCAwSljn18GCU6OlXBrnQYT39AjbejLJh4uqGG
+sQpgkE8bS3O675ZA4M/oN0UEyeFLkjsH7NbEaURCI6SNOE7N69DKAAEAvskr
+cXI8WN+gc2Sebr+re5D82NQDZQqQ7mA5mgcyvx8P480AwowEEBMIAD4FgmSR
+dHQECwkHCAmQ1A2KebeUiBQDFQgKBBYAAgECGQECmwMCHgEWIQTGIOrQYDGK
+CIiO6OrUDYp5t5SIFAAAccEA/3zjGFfibPdzzU5Q+9YrCSPOEkg5Octu/n7U
+6fOKr23kAQCFSMe0Bnr7/FZW+MGJhVkGLfKN8Iii4KLxPWz/Pe8tzcd7BGSR
+dHQSCCqGSM49AwEHAgMEnL9c4QAIsBs2E54l5JBe2t5EI/q0MqXbCCnIFlPu
+08mdWwzC2TRRd0cWdgmzxyZYaFmRp1viDp3WmPK17nu5pAMBCAcAAQDkYvOb
+Ril0hbuDfNDJi2NbD6+dTAA8LQm1L95fmum+8xBHwngEGBMIACoFgmSRdHQJ
+kNQNinm3lIgUApsMFiEExiDq0GAxigiIjujq1A2KebeUiBQAAI9AAP92ox2S
+iH5X9Dz/NRzkeKTzSkXNGFlrqIX5Q0VLilX3QAD9Hmr/tRGQI3Coc9gRa+L0
+DwjuwzqyUM4gI3ExJ2p8rY8=
+=oTNn
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+  await openpgp.sign({ message: await openpgp.createMessage({ text: 'hello' }), signingKeys: key })
+}));
+
+suite.add('openpgp.sign "hello" ECC p256 (webcrypto)', wrapAsync(false, async () => {
+  let saved = openpgp.config.minBytesForWebCrypto;
+  openpgp.config.minBytesForWebCrypto = 0
+  const key = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xXcEZJF0dBMIKoZIzj0DAQcCAwSljn18GCU6OlXBrnQYT39AjbejLJh4uqGG
+sQpgkE8bS3O675ZA4M/oN0UEyeFLkjsH7NbEaURCI6SNOE7N69DKAAEAvskr
+cXI8WN+gc2Sebr+re5D82NQDZQqQ7mA5mgcyvx8P480AwowEEBMIAD4FgmSR
+dHQECwkHCAmQ1A2KebeUiBQDFQgKBBYAAgECGQECmwMCHgEWIQTGIOrQYDGK
+CIiO6OrUDYp5t5SIFAAAccEA/3zjGFfibPdzzU5Q+9YrCSPOEkg5Octu/n7U
+6fOKr23kAQCFSMe0Bnr7/FZW+MGJhVkGLfKN8Iii4KLxPWz/Pe8tzcd7BGSR
+dHQSCCqGSM49AwEHAgMEnL9c4QAIsBs2E54l5JBe2t5EI/q0MqXbCCnIFlPu
+08mdWwzC2TRRd0cWdgmzxyZYaFmRp1viDp3WmPK17nu5pAMBCAcAAQDkYvOb
+Ril0hbuDfNDJi2NbD6+dTAA8LQm1L95fmum+8xBHwngEGBMIACoFgmSRdHQJ
+kNQNinm3lIgUApsMFiEExiDq0GAxigiIjujq1A2KebeUiBQAAI9AAP92ox2S
+iH5X9Dz/NRzkeKTzSkXNGFlrqIX5Q0VLilX3QAD9Hmr/tRGQI3Coc9gRa+L0
+DwjuwzqyUM4gI3ExJ2p8rY8=
+=oTNn
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+
+await openpgp.sign({ message: await openpgp.createMessage({ text: 'hello' }), signingKeys: key })
+openpgp.config.minBytesForWebCrypto = saved;
+}));
+
+addComparison('openpgp.sign 1kb ECC p256', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+// console.log(openpgp.config.minBytesForWebCrypto)
+  const key = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xXcEZJF0dBMIKoZIzj0DAQcCAwSljn18GCU6OlXBrnQYT39AjbejLJh4uqGG
+sQpgkE8bS3O675ZA4M/oN0UEyeFLkjsH7NbEaURCI6SNOE7N69DKAAEAvskr
+cXI8WN+gc2Sebr+re5D82NQDZQqQ7mA5mgcyvx8P480AwowEEBMIAD4FgmSR
+dHQECwkHCAmQ1A2KebeUiBQDFQgKBBYAAgECGQECmwMCHgEWIQTGIOrQYDGK
+CIiO6OrUDYp5t5SIFAAAccEA/3zjGFfibPdzzU5Q+9YrCSPOEkg5Octu/n7U
+6fOKr23kAQCFSMe0Bnr7/FZW+MGJhVkGLfKN8Iii4KLxPWz/Pe8tzcd7BGSR
+dHQSCCqGSM49AwEHAgMEnL9c4QAIsBs2E54l5JBe2t5EI/q0MqXbCCnIFlPu
+08mdWwzC2TRRd0cWdgmzxyZYaFmRp1viDp3WmPK17nu5pAMBCAcAAQDkYvOb
+Ril0hbuDfNDJi2NbD6+dTAA8LQm1L95fmum+8xBHwngEGBMIACoFgmSRdHQJ
+kNQNinm3lIgUApsMFiEExiDq0GAxigiIjujq1A2KebeUiBQAAI9AAP92ox2S
+iH5X9Dz/NRzkeKTzSkXNGFlrqIX5Q0VLilX3QAD9Hmr/tRGQI3Coc9gRa+L0
+DwjuwzqyUM4gI3ExJ2p8rY8=
+=oTNn
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+await openpgp.sign({ message: await openpgp.createMessage({ binary: new Uint8Array(1000) }), signingKeys: key })
+}));
+
+suite.add('openpgp.sign 1kb ECC p256 (webcrypto)', wrapAsync(false, async () => {
+  let saved = openpgp.config.minBytesForWebCrypto;
+  openpgp.config.minBytesForWebCrypto = 0
+  const key = await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xXcEZJF0dBMIKoZIzj0DAQcCAwSljn18GCU6OlXBrnQYT39AjbejLJh4uqGG
+sQpgkE8bS3O675ZA4M/oN0UEyeFLkjsH7NbEaURCI6SNOE7N69DKAAEAvskr
+cXI8WN+gc2Sebr+re5D82NQDZQqQ7mA5mgcyvx8P480AwowEEBMIAD4FgmSR
+dHQECwkHCAmQ1A2KebeUiBQDFQgKBBYAAgECGQECmwMCHgEWIQTGIOrQYDGK
+CIiO6OrUDYp5t5SIFAAAccEA/3zjGFfibPdzzU5Q+9YrCSPOEkg5Octu/n7U
+6fOKr23kAQCFSMe0Bnr7/FZW+MGJhVkGLfKN8Iii4KLxPWz/Pe8tzcd7BGSR
+dHQSCCqGSM49AwEHAgMEnL9c4QAIsBs2E54l5JBe2t5EI/q0MqXbCCnIFlPu
+08mdWwzC2TRRd0cWdgmzxyZYaFmRp1viDp3WmPK17nu5pAMBCAcAAQDkYvOb
+Ril0hbuDfNDJi2NbD6+dTAA8LQm1L95fmum+8xBHwngEGBMIACoFgmSRdHQJ
+kNQNinm3lIgUApsMFiEExiDq0GAxigiIjujq1A2KebeUiBQAAI9AAP92ox2S
+iH5X9Dz/NRzkeKTzSkXNGFlrqIX5Q0VLilX3QAD9Hmr/tRGQI3Coc9gRa+L0
+DwjuwzqyUM4gI3ExJ2p8rY8=
+=oTNn
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+
+await openpgp.sign({ message: await openpgp.createMessage({ binary: new Uint8Array(1000) }), signingKeys: key })
+openpgp.config.minBytesForWebCrypto = saved;
+}));
+
+
+
+addComparison('openpgp.readKey curve25519', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+// console.log(openpgp.config.minBytesForWebCrypto)
+    await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xVgEZHn5eBYJKwYBBAHaRw8BAQdAnA4KlUY5y6Yn2Uj1TROKXQk08lErqw6P
+DhUgR1dttOkAAP9YDx8p3IWU5AWNRBMbAv1XYxfToZ+uOXWei8WWKLwUCA5O
+zQNhc2LCjAQQFgoAPgWCZHn5eAQLCQcICZAuk1Ao92zjgwMVCAoEFgACAQIZ
+AQKbAwIeARYhBNWNtMGSFV0JrDTiri6TUCj3bOODAACAcAD+JeyAriaaZcUJ
+0Ib02j0oUy6uBDUr+4Uz1TBDdRZ5PhAA/RPUZozEaI61a9dkPoZep5aQeLrb
+IX5htSxkJnnxywoCx10EZHn5eBIKKwYBBAGXVQEFAQEHQJRfGkRtWuuxhglM
++SRPdlDc2CWGLU7pDDg+cZCakIRcAwEIBwAA/19SDZc/estBt+HsoU1Orw2/
+anC9ELfvSClYWWcakdv4EKjCeAQYFggAKgWCZHn5eAmQLpNQKPds44MCmwwW
+IQTVjbTBkhVdCaw04q4uk1Ao92zjgwAAIXMA/1SvyIrkbgMyJSs58x87Zd6f
+JsCzdVb4LxYH8A/dSJXUAP9mL/2sVzIlS7t2LIIGtVboQ9vy/RYbjixAIKBp
+fvRJDg==
+=doeF
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+}));
+
+suite.add('openpgp.readKey curve25519 (webcrypto)', wrapAsync(false, async () => {
+  let saved = openpgp.config.minBytesForWebCrypto;
+  openpgp.config.minBytesForWebCrypto = 0
+    await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+xVgEZHn5eBYJKwYBBAHaRw8BAQdAnA4KlUY5y6Yn2Uj1TROKXQk08lErqw6P
+DhUgR1dttOkAAP9YDx8p3IWU5AWNRBMbAv1XYxfToZ+uOXWei8WWKLwUCA5O
+zQNhc2LCjAQQFgoAPgWCZHn5eAQLCQcICZAuk1Ao92zjgwMVCAoEFgACAQIZ
+AQKbAwIeARYhBNWNtMGSFV0JrDTiri6TUCj3bOODAACAcAD+JeyAriaaZcUJ
+0Ib02j0oUy6uBDUr+4Uz1TBDdRZ5PhAA/RPUZozEaI61a9dkPoZep5aQeLrb
+IX5htSxkJnnxywoCx10EZHn5eBIKKwYBBAGXVQEFAQEHQJRfGkRtWuuxhglM
++SRPdlDc2CWGLU7pDDg+cZCakIRcAwEIBwAA/19SDZc/estBt+HsoU1Orw2/
+anC9ELfvSClYWWcakdv4EKjCeAQYFggAKgWCZHn5eAmQLpNQKPds44MCmwwW
+IQTVjbTBkhVdCaw04q4uk1Ao92zjgwAAIXMA/1SvyIrkbgMyJSs58x87Zd6f
+JsCzdVb4LxYH8A/dSJXUAP9mL/2sVzIlS7t2LIIGtVboQ9vy/RYbjixAIKBp
+fvRJDg==
+=doeF
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+openpgp.config.minBytesForWebCrypto = saved;
+}));
+
+addComparison('openpgp.readKey RSA', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+// console.log(openpgp.config.minBytesForWebCrypto)
+    await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+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
+yzX8vfbvORx5lxHh2Q0OurgvR3bZSWeDVXBp8Q==
+=GFOm
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+}));
+
+suite.add('openpgp.readKey RSA (webcrypto)', wrapAsync(false, async () => {
+  let saved = openpgp.config.minBytesForWebCrypto;
+  openpgp.config.minBytesForWebCrypto = 0
+    await openpgp.readKey({ armoredKey: `-----BEGIN PGP PRIVATE KEY BLOCK-----
+
+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
+yzX8vfbvORx5lxHh2Q0OurgvR3bZSWeDVXBp8Q==
+=GFOm
+-----END PGP PRIVATE KEY BLOCK-----
+` });
+openpgp.config.minBytesForWebCrypto = saved;
+}));
+
+
+addComparison('openpgp.generate ECC p256 key', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const { privateKey: armoredKey } = await openpgp.generateKey({ userIDs: { userID: 'test@test' }, curve: 'p256'});
+  // await openpgp.readKey({ armoredKey });
+}));
+
+suite.add('openpgp.generate ECC p256 key (webcrypto)', wrapAsync(false, async () => {
+  let saved = openpgp.config.minBytesForWebCrypto;
+
+  openpgp.config.minBytesForWebCrypto = 0
+  const { privateKey: armoredKey } = await openpgp.generateKey({ userIDs: { userID: 'test@test' }, curve: 'p256'});
+  // await openpgp.readKey({ armoredKey });
+  openpgp.config.minBytesForWebCrypto = saved;
+
+}));
+
+addComparison('openpgp.generate RSA key', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const { privateKey: armoredKey } = await openpgp.generateKey({ type:'rsa', userIDs: { userID: 'test@test' }});
+  // await openpgp.readKey({ armoredKey });
+}));
+
+suite.add('openpgp.generate RSA key (webcrypto)', wrapAsync(false, async () => {
+  let saved = openpgp.config.minBytesForWebCrypto;
+
+  openpgp.config.minBytesForWebCrypto = 0
+  const { privateKey: armoredKey } = await openpgp.generateKey({ type:'rsa', userIDs: { userID: 'test@test' }});
+  // await openpgp.readKey({ armoredKey });
+  openpgp.config.minBytesForWebCrypto = saved;
+
+}));
+
+// addComparison('key import (CFB, binary)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+//   await crypto.subtle.importKey('raw', new Uint8Array(32), 'aes-cbc', false, ['encrypt']);
+// }));
+
+addComparison('openpgp.encrypt 1kb (CFB, binary)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000) });
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+}));
+
+addComparison('openpgp.encrypt 1MB (CFB, binary)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(ONE_MEGABYTE) });
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+}));
+
+addComparison('openpgp.encrypt/decrypt (CFB, binary)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(ONE_MEGABYTE) });
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  // assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+  await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+}));
+
+addComparison('openpgp.encrypt/decrypt (CFB, binary, with streaming)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const inputStream = streamFromGenerator(largeDataGenerator({ chunk: new Uint8Array(ONE_MEGABYTE), numberOfChunks: 1 }));
+  const plaintextMessage = await openpgp.createMessage({ binary: inputStream });
+  // assert(plaintextMessage.fromStream);
+
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  // assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+  const { data: decryptedData } = await openpgp.decrypt({ message: encryptedMessage, passwords, config });
+  // read out output stream to trigger decryption
+  for await (const chunk of decryptedData) {
+    // blackhole
+  }
+}));
+
+addComparison('openpgp.encrypt/decrypt (CFB, text @ 10MB, with unauthenticated streaming)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: false, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const inputStream = streamFromGenerator(largeDataGenerator({ chunk: 'a'.repeat(ONE_MEGABYTE / 2), numberOfChunks: 20 }));
+  const plaintextMessage = await openpgp.createMessage({ text: inputStream });
+  // assert(plaintextMessage.fromStream);
+
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+  const encryptedMessage = await openpgp.readMessage({ armoredMessage: armoredEncryptedMessage });
+  // assert.ok(encryptedMessage.packets[1] instanceof openpgp.SymEncryptedIntegrityProtectedDataPacket);
+  const { data: decryptedData } = await openpgp.decrypt({
+    message: encryptedMessage,
+    passwords,
+    config: { ...config, allowUnauthenticatedStream: true }
+  });
+  // read out output stream to trigger decryption
+  for await (const chunk of decryptedData) {
+    // blackhole
+  }
+}));
+
+addComparison('openpgp.encrypt 1kb (GCM, binary)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(1000) });
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+}));
+
+addComparison('openpgp.encrypt 1MB (GCM, binary)', asmcryptoFlag => wrapAsync(asmcryptoFlag, async () => {
+  const passwords = 'password';
+  const config = { aeadProtect: true, preferredCompressionAlgorithm: openpgp.enums.compression.uncompressed };
+  const plaintextMessage = await openpgp.createMessage({ binary: new Uint8Array(ONE_MEGABYTE) });
+  const armoredEncryptedMessage = await openpgp.encrypt({ message: plaintextMessage, passwords, config });
+}));
+const htmlDiv = document.createElement('div');
+htmlDiv.style.minHeight = '70px'
+document.getElementsByTagName('body')[0].appendChild(htmlDiv);
+  
+
+suite.on('cycle', event => {
+    // Output benchmark result by converting benchmark result to string
+    // eslint-disable-next-line no-console
+    console.log(String(event.target));
+
+    const output = document.createElement('div');
+    output.innerText = String(event.target) + `\t[${(1/event.target.hz * 1000).toFixed(2)} ms]`;
+    htmlDiv.appendChild(output)
+  });
+
+suite.run({ 'async': true });
+
+</script>
+
+  </body>
+</html>

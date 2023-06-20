@@ -24,6 +24,7 @@
 import { AES_GCM } from '@openpgp/asmcrypto.js/aes/gcm.js';
 import util from '../../util';
 import enums from '../../enums';
+import globalConfig from '../../config';
 
 const webCrypto = util.getWebCrypto();
 const nodeCrypto = util.getNodeCrypto();
@@ -66,7 +67,7 @@ async function GCM(cipher, key) {
   }
 
   try {
-    if (util.getWebCrypto()) {
+    if (util.getWebCrypto() && !globalConfig.asmcrypto) {
       const _key = await webCrypto.importKey('raw', key, { name: ALGO }, false, ['encrypt', 'decrypt']);
       // Safari 13 does not support GCM-en/decrypting empty messages
       const isSafari13 = navigator.userAgent.match(/Version\/13\.\d(\.\d)* Safari/);

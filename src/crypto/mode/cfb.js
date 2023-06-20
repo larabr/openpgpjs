@@ -26,6 +26,7 @@ import * as stream from '@openpgp/web-stream-tools';
 import getCipher from '../cipher/getCipher';
 import util from '../../util';
 import enums from '../../enums';
+import defaultConfig from '../../config';
 
 const webCrypto = util.getWebCrypto();
 const nodeCrypto = util.getNodeCrypto();
@@ -236,7 +237,7 @@ class WebCryptoEncryptor {
 }
 
 async function aesEncrypt(algo, key, pt, iv) {
-  if (webCrypto && await WebCryptoEncryptor.isSupported(algo)) { // Chromium does not implement AES with 192-bit keys
+  if (webCrypto && await WebCryptoEncryptor.isSupported(algo) && !defaultConfig.asmcrypto) { // Chromium does not implement AES with 192-bit keys
     const cfb = new WebCryptoEncryptor(algo, key, iv);
     return util.isStream(pt) ? stream.transform(pt, value => cfb.encryptChunk(value), () => cfb.finish()) : cfb.encrypt(pt);
   } else {
