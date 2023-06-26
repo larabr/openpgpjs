@@ -940,7 +940,6 @@ function tests() {
       dataArrived();
       reader.releaseLock();
       await stream.cancel(decrypted.data, new Error('canceled by test'));
-      await new Promise(setTimeout);
       expect(canceled).to.be.true;
     });
   });
