@@ -91,10 +91,12 @@ class Argon2S2K {
     const decodedM = 2 << (this.encodedM - 1);
 
     try {
-      if (!argon2Promise) { // first load
-        loadArgonWasmModule = loadArgonWasmModule || (await import('argon2id')).default;
-        argon2Promise = loadArgonWasmModule();
-      }
+      // on first load, the argon2 lib is imported and the WASM module is initialized.
+      // the two steps need to be atomic to avoid race conditions causing multiple wasm modules
+      // to be loaded when `argon2Promise` is not initialized.
+      loadArgonWasmModule = loadArgonWasmModule || (await import('argon2id')).default;
+      argon2Promise = argon2Promise || loadArgonWasmModule();
+
       // important to keep local ref to argon2 in case the module is reloaded by another instance
       const argon2 = await argon2Promise;
 
