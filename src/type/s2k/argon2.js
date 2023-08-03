@@ -93,7 +93,7 @@ class Argon2S2K {
     try {
       // on first load, the argon2 lib is imported and the WASM module is initialized.
       // the two steps need to be atomic to avoid race conditions causing multiple wasm modules
-      // to be loaded when `argon2Promise` is not initialized.
+      // being loaded when `argon2Promise` is not initialized.
       loadArgonWasmModule = loadArgonWasmModule || (await import('argon2id')).default;
       argon2Promise = argon2Promise || loadArgonWasmModule();
 
@@ -116,6 +116,7 @@ class Argon2S2K {
       if (decodedM > ARGON2_WASM_MEMORY_THRESHOLD_RELOAD) {
         // it will be awaited if needed at the next `produceKey` invocation
         argon2Promise = loadArgonWasmModule();
+        argon2Promise.catch(() => {});
       }
       return hash;
     } catch (e) {
