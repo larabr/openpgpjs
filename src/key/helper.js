@@ -93,7 +93,9 @@ export async function createBindingSignature(subkey, primaryKey, options, config
       signatureType: enums.signature.keyBinding
     }, options.date, undefined, undefined, undefined, config);
   } else {
-    signatureProperties.keyFlags = [enums.keyFlags.encryptCommunication | enums.keyFlags.encryptStorage];
+    signatureProperties.keyFlags = options.forwarding ?
+      [enums.keyFlags.forwardedCommunication] :
+      [enums.keyFlags.encryptCommunication | enums.keyFlags.encryptStorage];
   }
   if (options.keyExpirationTime > 0) {
     signatureProperties.keyExpirationTime = options.keyExpirationTime;
@@ -325,6 +327,10 @@ export function sanitizeKeyOptions(options, subkeyDefaults = {}) {
   options.date = options.date || subkeyDefaults.date;
 
   options.sign = options.sign || false;
+  options.forwarding = options.forwarding || false;
+  if (options.sign && options.forwarding) {
+    throw new Error('Incompatible options: "sign" and "forwarding" cannot be set together');
+  }
 
   switch (options.type) {
     case 'ecc':
@@ -383,7 +389,12 @@ export function isValidEncryptionKeyPacket(keyPacket, signature) {
 }
 
 export function isValidDecryptionKeyPacket(signature, config) {
-  if (config.allowInsecureDecryptionWithSigningKeys) {
+  const isSigningKey = !signature.keyFlags ||
+    (signature.keyFlags[0] & enums.keyFlags.sign) !== 0 ||
+    (signature.keyFlags[0] & enums.keyFlags.certifyKeys) !== 0 ||
+    (signature.keyFlags[0] & enums.keyFlags.authentication) !== 0;
+
+  if (isSigningKey && config.allowInsecureDecryptionWithSigningKeys) {
     // This is only relevant for RSA keys, all other signing algorithms cannot decrypt
     return true;
   }
