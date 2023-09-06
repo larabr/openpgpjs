@@ -52,4 +52,12 @@ module.exports = () => describe('Forwarding', function() {
     const { data: expectedSerializedKey } = await openpgp.unarmor(charlieKeyArmored);
     expect(serializedKey).to.deep.equal(expectedSerializedKey);
   });
+
+  it('generates subkey with forwarding flag (0x40)', async function() {
+    const { privateKey: armoredKey } = await openpgp.generateKey({ userIDs: { email: 'test@forwarding.it' }, subkeys: [{ forwarding: true }, {}] });
+    const privateKey = await openpgp.readKey({ armoredKey });
+
+    expect(privateKey.subkeys[0].bindingSignatures[0].keyFlags[0]).to.equal(openpgp.enums.keyFlags.forwardedCommunication);
+    expect(privateKey.subkeys[1].bindingSignatures[0].keyFlags[0]).to.equal(openpgp.enums.keyFlags.encryptCommunication | openpgp.enums.keyFlags.encryptStorage);
+  });
 });

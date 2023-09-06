@@ -706,6 +706,7 @@ interface SubkeyOptions {
   keyExpirationTime?: number;
   date?: Date;
   sign?: boolean;
+  forwarding?: boolean;
   config?: PartialConfig;
 }
 
