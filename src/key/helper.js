@@ -398,7 +398,12 @@ export function isValidEncryptionKeyPacket(keyPacket, signature) {
 }
 
 export function isValidDecryptionKeyPacket(signature, config) {
-  if (config.allowInsecureDecryptionWithSigningKeys) {
+  const isSigningKey = !signature.keyFlags ||
+    (signature.keyFlags[0] & enums.keyFlags.sign) !== 0 ||
+    (signature.keyFlags[0] & enums.keyFlags.certifyKeys) !== 0 ||
+    (signature.keyFlags[0] & enums.keyFlags.authentication) !== 0;
+
+  if (isSigningKey && config.allowInsecureDecryptionWithSigningKeys) {
     // This is only relevant for RSA keys, all other signing algorithms cannot decrypt
     return true;
   }
