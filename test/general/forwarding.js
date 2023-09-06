@@ -89,4 +89,13 @@ YdgLdgXl0dn/xdXjCQ==
     expect(reformattedKey.subkeys[0].bindingSignatures[0].keyFlags[0]).to.equal(openpgp.enums.keyFlags.forwardedCommunication);
     expect(reformattedKey.subkeys[1].bindingSignatures[0].keyFlags[0]).to.equal(openpgp.enums.keyFlags.encryptCommunication | openpgp.enums.keyFlags.encryptStorage);
   });
+
+  it('refuses to encrypt using encryption key with forwarding flag (0x40)', async function() {
+    const charlieKey = await openpgp.readKey({ armoredKey: charlieKeyArmored });
+
+    await expect(openpgp.encrypt({
+      message: await openpgp.createMessage({ text: 'abc' }),
+      encryptionKeys: charlieKey
+    })).to.be.rejectedWith(/Could not find valid encryption key packet/);
+  });
 });
