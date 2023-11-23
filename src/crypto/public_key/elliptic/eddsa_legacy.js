@@ -27,6 +27,7 @@ import nacl from '@openpgp/tweetnacl/nacl-fast-light';
 import util from '../../../util';
 import enums from '../../../enums';
 import hash from '../../hash';
+import defaultConfig from '../../../config';
 
 nacl.hash = bytes => new Uint8Array(sha512().update(bytes).digest());
 
@@ -51,7 +52,7 @@ export async function sign(oid, hashAlgo, message, publicKey, privateKey, hashed
   }
   const secretKey = util.concatUint8Array([privateKey, publicKey.subarray(1)]);
   const signature = nacl.sign.detached(hashed, secretKey);
-  if (!nacl.sign.detached.verify(hashed, signature, publicKey.subarray(1))) {
+  if (defaultConfig.checkEdDSAFaultySignatures && !nacl.sign.detached.verify(hashed, signature, publicKey.subarray(1))) {
     /**
      * Detect faulty signatures caused by random bitflips during `crypto_sign` which could lead to private key extraction
      * if two signatures over the same message are obtained.

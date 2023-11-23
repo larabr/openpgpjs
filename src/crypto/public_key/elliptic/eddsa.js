@@ -27,6 +27,7 @@ import util from '../../../util';
 import enums from '../../../enums';
 import hash from '../../hash';
 import { getRandomBytes } from '../../random';
+import defaultConfig from '../../../config';
 
 nacl.hash = bytes => new Uint8Array(sha512().update(bytes).digest());
 
@@ -68,7 +69,7 @@ export async function sign(algo, hashAlgo, message, publicKey, privateKey, hashe
     case enums.publicKey.ed25519: {
       const secretKey = util.concatUint8Array([privateKey, publicKey]);
       const signature = nacl.sign.detached(hashed, secretKey);
-      if (!nacl.sign.detached.verify(hashed, signature, publicKey)) {
+      if (defaultConfig.checkEdDSAFaultySignatures && !nacl.sign.detached.verify(hashed, signature, publicKey)) {
         /**
          * Detect faulty signatures caused by random bitflips during `crypto_sign` which could lead to private key extraction
          * if two signatures over the same message are obtained.
