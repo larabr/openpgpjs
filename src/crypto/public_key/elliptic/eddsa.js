@@ -27,6 +27,7 @@ import util from '../../../util';
 import enums from '../../../enums';
 import hash from '../../hash';
 import { getRandomBytes } from '../../random';
+import defaultConfig from '../../../config';
 
 nacl.hash = bytes => new Uint8Array(sha512().update(bytes).digest());
 
@@ -68,6 +69,20 @@ export async function sign(algo, hashAlgo, message, publicKey, privateKey, hashe
     case enums.publicKey.ed25519: {
       const secretKey = util.concatUint8Array([privateKey, publicKey]);
       const signature = nacl.sign.detached(hashed, secretKey);
+      if (defaultConfig.checkEdDSAFaultySignatures && !nacl.sign.detached.verify(hashed, signature, publicKey)) {
+        /**
+         * Detect faulty signatures caused by random bitflips during `crypto_sign` which could lead to private key extraction
+         * if two signatures over the same message are obtained.
+         * See https://github.com/jedisct1/libsodium/issues/170.
+         * If the input data is not deterministic, e.g. thanks to the random salt in v6 OpenPGP signatures (not yet implemented),
+         * then the generated signature is always safe, and the verification step is skipped.
+         * Otherwise, we need to verify the generated to ensure that no bitflip occured:
+         * - in M between the computation of `r` and `h`.
+         * - in the public key before computing `h`
+         * The verification step is almost 2-3 times as slow as signing, but it's faster than re-signing + re-deriving the public key for separate checks.
+         */
+        throw new Error('Transient signing failure');
+      }
       return { RS: signature };
     }
     case enums.publicKey.ed448:
