@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-/* globals tryTests, loadStreamsPolyfill */
+/* globals tryTests, loadStreamsPolyfillInBrowser */
 import sinon from 'sinon';
 import * as stream from '@openpgp/web-stream-tools';
 import { use as chaiUse, expect } from 'chai';
@@ -3188,7 +3188,7 @@ XfA3pqV4mTzF
         });
 
         it('should fail to decrypt modified message', async function() {
-          await loadStreamsPolyfill();
+          await loadStreamsPolyfillInBrowser();
           // need to generate new key with AEAD support
           const { privateKey } = await openpgp.generateKey({ userIDs: [{ email: 'test@email.com' }], type: 'rsa', format: 'object' });
           const { aeadAlgo } = await getPreferredCipherSuite([privateKey], undefined, undefined, openpgp.config);
@@ -3489,7 +3489,7 @@ XfA3pqV4mTzF
           it('Streaming encrypt and decrypt small message roundtrip', async function() {
             const plaintext = [];
             let i = 0;
-            await loadStreamsPolyfill();
+            await loadStreamsPolyfillInBrowser();
             const data = new globalThis.ReadableStream({
               pull(controller) {
                 if (i++ < 4) {
@@ -3840,9 +3840,7 @@ XfA3pqV4mTzF
           packets.push(message.packets.findPacket(openpgp.enums.packet.signature));
           packets.push(message.packets.findPacket(openpgp.enums.packet.literalData));
           verifyOpt.message = await openpgp.readMessage({
-            binaryMessage: stream[
-              globalThis.ReadableStream ? 'toStream' : 'webToNode'
-            ](packets.write())
+            binaryMessage: stream.toStream(packets.write())
           });
           return openpgp.verify(verifyOpt);
         }).then(async function (verified) {

@@ -162,7 +162,8 @@ function node_zlib(func, create, options = {}) {
         });
       }));
     }
-    return stream.nodeToWeb(stream.webToNode(data).pipe(create(options)));
+    const { Readable: NodeReadableStream } = util.nodeRequire('stream');
+    return NodeReadableStream.toWeb(NodeReadableStream.fromWeb(data).pipe(create(options)));
   };
 }
 

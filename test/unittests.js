@@ -26,8 +26,10 @@ globalThis.tryTests = function(name, tests, options) {
   }
 };
 
-globalThis.loadStreamsPolyfill = function() {
-  return import('web-streams-polyfill');
+globalThis.loadStreamsPolyfillInBrowser = function() {
+  const detectNode = () => typeof globalThis.process === 'object' && typeof globalThis.process.versions === 'object';
+
+  return detectNode() || import('web-streams-polyfill');
 };
 
 import runWorkerTests from './worker';
