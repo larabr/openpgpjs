@@ -424,7 +424,13 @@ const util = {
    * @returns {Object} The SubtleCrypto api or 'undefined'.
    */
   getWebCrypto: function() {
-    return typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle;
+    const globalWebCrypto = typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle;
+    // Fallback for Node 16, which does not expose WebCrypto as a global
+    const webCrypto = globalWebCrypto || this.getNodeCrypto()?.webcrypto.subtle;
+    if (!webCrypto) {
+      throw new Error('WebCrypto API is required');
+    }
+    return webCrypto;
   },
 
   /**
