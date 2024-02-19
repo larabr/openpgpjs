@@ -1,4 +1,5 @@
 /* eslint-disable no-process-env */
+const fs = require('fs');
 const { chromium, firefox, webkit } = require('playwright');
 
 process.env.CHROME_BIN = chromium.executablePath();
@@ -12,7 +13,13 @@ module.exports = function(config) {
     basePath: '..',
 
     // hostname for local
-    hostname: '127.0.0.1',
+    hostname: 'bs-local.com',
+    protocol: 'https:',
+    httpsServerOptions: {
+      key: fs.readFileSync('./127.0.0.1-key.pem', 'utf8'),
+      cert: fs.readFileSync('./127.0.0.1.pem', 'utf8')
+    },
+    proxyValidateSSL: false,
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
@@ -90,7 +97,9 @@ module.exports = function(config) {
       build: process.env.GITHUB_SHA,
       name: process.env.GITHUB_WORKFLOW,
       project: `openpgpjs/${process.env.GITHUB_EVENT_NAME || 'push'}${process.env.LIGHTWEIGHT ? '/lightweight' : ''}`,
-      timeout: 450
+      timeout: 450,
+      acceptSslCerts: true,
+      networkLogs: true
     },
 
     // define browsers
