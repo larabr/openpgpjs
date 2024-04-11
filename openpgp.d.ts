@@ -925,6 +925,7 @@ export namespace enums {
 }
 
 export declare class Argon2S2K {
+  static reloadWasmModule(): void;
   constructor(config: Config);
   salt: Uint8Array;
   /** @throws Argon2OutOfMemoryError */

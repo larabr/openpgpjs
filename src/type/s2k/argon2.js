@@ -26,6 +26,14 @@ let argon2Promise;
 const ARGON2_WASM_MEMORY_THRESHOLD_RELOAD = 2 << 19;
 
 class Argon2S2K {
+  static reloadWasmModule() {
+    if (!loadArgonWasmModule) return;
+
+    // it will be awaited if needed at the next `produceKey` invocation
+    argon2Promise = loadArgonWasmModule();
+    argon2Promise.catch(() => {});
+  }
+
   /**
   * @param {Object} [config] - Full configuration, defaults to openpgp.config
   */
@@ -114,9 +122,7 @@ class Argon2S2K {
 
       // a lot of memory was used, reload to deallocate
       if (decodedM > ARGON2_WASM_MEMORY_THRESHOLD_RELOAD) {
-        // it will be awaited if needed at the next `produceKey` invocation
-        argon2Promise = loadArgonWasmModule();
-        argon2Promise.catch(() => {});
+        Argon2S2K.reloadWasmModule();
       }
       return hash;
     } catch (e) {
