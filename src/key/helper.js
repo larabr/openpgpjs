@@ -173,7 +173,8 @@ export async function getPreferredCompressionAlgo(keys = [], date = new Date(), 
 export async function getPreferredCipherSuite(keys = [], date = new Date(), userIDs = [], config = defaultConfig) {
   const selfSigs = await Promise.all(keys.map((key, i) => key.getPrimarySelfSignature(date, userIDs[i], config)));
   const withAEAD = keys.length ?
-    selfSigs.every(selfSig => selfSig.features && (selfSig.features[0] & enums.features.seipdv2)) :
+    selfSigs.every(selfSig => (
+      selfSig.features && (selfSig.features[0] & enums.features.seipdv2) && !config.ignoreSEIPDv2FeatureFlag)) :
     config.aeadProtect;
 
   if (withAEAD) {
