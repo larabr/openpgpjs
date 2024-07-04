@@ -596,8 +596,11 @@ export async function validateParams(algo, publicParams, privateParams) {
       const { eccPublicKey, mlkemPublicKey } = publicParams;
       return publicKey.postQuantum.kem.validateParams(algo, eccPublicKey, eccSecretKey, mlkemPublicKey, mlkemSecretKey);
     }
-    case enums.publicKey.pqc_mldsa_ed25519:
-      throw new Error('TODO');
+    case enums.publicKey.pqc_mldsa_ed25519: {
+      const { eccSecretKey, mldsaSecretKey } = privateParams;
+      const { eccPublicKey, mldsaPublicKey } = publicParams;
+      return publicKey.postQuantum.signature.validateParams(algo, eccPublicKey, eccSecretKey, mldsaPublicKey, mldsaSecretKey);
+    }
     default:
       throw new Error('Unknown public key algorithm.');
   }
