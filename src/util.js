@@ -99,6 +99,7 @@ const util = {
   },
 
   readDate: function (bytes) {
+    if (!bytes) { throw new Error('bytes'); }
     const n = util.readNumber(bytes);
     const d = new Date(n * 1000);
     return d;
