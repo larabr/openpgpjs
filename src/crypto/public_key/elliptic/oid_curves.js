@@ -184,6 +184,8 @@ class CurveWithOID {
       case 'curve25519Legacy': {
         const { k, A } = await ecdhXGenerate(enums.publicKey.x25519);
         const privateKey = k.slice().reverse();
+        privateKey[0] = (privateKey[0] & 127) | 64;
+        privateKey[31] &= 248;
         const publicKey = util.concatUint8Array([new Uint8Array([this.wireFormatLeadingByte]), A]);
         return { publicKey, privateKey };
       }
