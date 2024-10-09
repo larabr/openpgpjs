@@ -64,6 +64,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
 
+      - name: Generate self-signed HTTPS certificates for web-test-runner server
+        uses: kofemann/action-create-certificate@v0.0.4
+        with:
+          hostcert: '127.0.0.1.pem'
+          hostkey:  '127.0.0.1-key.pem'
+          cachain:  'ca-chain.pem'
+
       - name: Retrieve cached built folders
         uses: actions/cache/restore@v4
         id: cache-full
@@ -119,6 +126,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
 
+      - name: Generate self-signed HTTPS certificates for web-test-runner server
+        uses: kofemann/action-create-certificate@v0.0.4
+        with:
+          hostcert: '127.0.0.1.pem'
+          hostkey:  '127.0.0.1-key.pem'
+          cachain:  'ca-chain.pem'
+
       - name: Install dependencies
         run: npm ci --ignore-scripts
 
@@ -130,13 +144,6 @@ jobs:
             dist
             test/lib
           key: cache-${{ github.sha }}
-
-      - name: Generate self-signed HTTPS certificates for web-test-runner server
-        uses: kofemann/action-create-certificate@v0.0.4
-        with:
-          hostcert: '127.0.0.1.pem'
-          hostkey:  '127.0.0.1-key.pem'
-          cachain:  'ca-chain.pem'
 
       - name: Wait for other Browserstack tests to finish
         uses: softprops/turnstyle@v1
