@@ -5,15 +5,22 @@ const sharedBrowserstackCapabilities = {
   'browserstack.key': process.env.BROWSERSTACK_ACCESS_KEY,
 
   project: `openpgpjs/${process.env.GITHUB_EVENT_NAME || 'push'}${process.env.LIGHTWEIGHT ? '/lightweight' : ''}`,
-  name: process.env.GITHUB_WORKFLOW,
-  build: process.env.GITHUB_SHA,
-  timeout: 450
+  name: process.env.GITHUB_WORKFLOW || 'local',
+  build: process.env.GITHUB_SHA || 'local',
+  timeout: 450,
+  'browserstack.acceptInsecureCerts': true,
 };
 
 export default {
   nodeResolve: true, // to resolve npm module imports in `unittests.html`
   files: './test/unittests.html',
-
+  protocol: 'https:',
+  hostname: 'localhost',
+  http2: true,
+  sslKey: './127.0.0.1-key.pem',
+  sslCert: './127.0.0.1.pem',
+  testsFinishTimeout: 240000,
+  concurrency: 1,
   groups: [
     { name: 'local' }, // group meant to be used with either --browser or --manual options via CLI
     {

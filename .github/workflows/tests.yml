@@ -131,6 +131,13 @@ jobs:
             test/lib
           key: cache-${{ github.sha }}
 
+      - name: Generate self-signed HTTPS certificates for web-test-runner server
+        uses: kofemann/action-create-certificate@v0.0.4
+        with:
+          hostcert: '127.0.0.1.pem'
+          hostkey:  '127.0.0.1-key.pem'
+          cachain:  'ca-chain.pem'
+
       - name: Wait for other Browserstack tests to finish
         uses: softprops/turnstyle@v1
         with:
