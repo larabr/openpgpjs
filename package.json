@@ -52,6 +52,7 @@
     "prebrowsertest": "npm run build-test",
     "browsertest": "web-test-runner --config test/web-test-runner.config.js --group local --manual --open",
     "test-browser": "web-test-runner --config test/web-test-runner.config.js --group local --playwright --browsers chromium firefox webkit",
+    "test-browser:ci": "web-test-runner --config test/web-test-runner.config.js --group headless:ci",
     "test-browserstack": "web-test-runner --config test/web-test-runner.config.js --group browserstack",
     "coverage": "c8 npm test",
     "lint": "eslint .",

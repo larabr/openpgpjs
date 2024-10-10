@@ -109,12 +109,12 @@ jobs:
         run: npx playwright install --with-deps webkit
 
       - name: Run browser tests
-        run: npm run test-browser -- --static-logging
+        run: npm run test-browser:ci -- --static-logging
 
       - name: Run browser tests (lightweight) # overwrite test/lib
         run: |
           npm run build-test --lightweight
-          npm run test-browser -- --static-logging
+          npm run test-browser:ci -- --static-logging
 
   test-browsers-compatibility:
     name: Browsers (older, on Browserstack)

@@ -1,4 +1,5 @@
 import { browserstackLauncher } from '@web/test-runner-browserstack';
+import { playwrightLauncher } from '@web/test-runner-playwright';
 
 const sharedBrowserstackCapabilities = {
   'browserstack.user': process.env.BROWSERSTACK_USERNAME,
@@ -23,6 +24,21 @@ export default {
   concurrency: 1,
   groups: [
     { name: 'local' }, // group meant to be used with either --browser or --manual options via CLI
+    {
+      name: 'headless:ci',
+      browsers: [
+        playwrightLauncher({
+          product: 'chromium',
+          headless: true,
+          createBrowserContext: ({ browser, config }) => browser.newContext({ ignoreHTTPSErrors: true }),
+        }),
+        playwrightLauncher({
+          product: 'firefox',
+          headless: true,
+          createBrowserContext: ({ browser, config }) => browser.newContext({ ignoreHTTPSErrors: true }),
+        })
+      ]
+    },
     {
       name: 'browserstack',
       browsers: process.env.BROWSERSTACK_USERNAME && [
