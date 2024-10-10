@@ -12,6 +12,11 @@ const sharedBrowserstackCapabilities = {
   'browserstack.acceptInsecureCerts': true,
 };
 
+const sharedPlaywrightCIOptions = {
+  createBrowserContext: ({ browser, config }) => browser.newContext({ ignoreHTTPSErrors: true }),
+  headless: true
+}
+
 export default {
   nodeResolve: true, // to resolve npm module imports in `unittests.html`
   files: './test/unittests.html',
@@ -20,7 +25,9 @@ export default {
   http2: true,
   sslKey: './127.0.0.1-key.pem',
   sslCert: './127.0.0.1.pem',
-  testsFinishTimeout: 240000,
+  testsStartTimeout: 120000,
+  browserStartTimeout: 120000,
+  testsFinishTimeout: 450000,
   concurrency: 1,
   groups: [
     { name: 'local' }, // group meant to be used with either --browser or --manual options via CLI
@@ -28,14 +35,16 @@ export default {
       name: 'headless:ci',
       browsers: [
         playwrightLauncher({
-          product: 'chromium',
-          headless: true,
-          createBrowserContext: ({ browser, config }) => browser.newContext({ ignoreHTTPSErrors: true }),
+          ...sharedPlaywrightCIOptions,
+          product: 'chromium'
         }),
         playwrightLauncher({
-          product: 'firefox',
-          headless: true,
-          createBrowserContext: ({ browser, config }) => browser.newContext({ ignoreHTTPSErrors: true }),
+          ...sharedPlaywrightCIOptions,
+          product: 'firefox'
+        }),
+        playwrightLauncher({
+          ...sharedPlaywrightCIOptions,
+          product: 'webkit'
         })
       ]
     },
