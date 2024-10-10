@@ -9,6 +9,7 @@ const sharedBrowserstackCapabilities = {
   name: process.env.GITHUB_WORKFLOW || 'local',
   build: process.env.GITHUB_SHA || 'local',
   timeout: 450,
+  acceptSslCerts: true,
   'browserstack.acceptInsecureCerts': true,
 };
 
@@ -21,7 +22,7 @@ export default {
   nodeResolve: true, // to resolve npm module imports in `unittests.html`
   files: './test/unittests.html',
   protocol: 'https:',
-  hostname: 'localhost',
+  hostname: '127.0.0.1',
   http2: true,
   sslKey: './127.0.0.1-key.pem',
   sslCert: './127.0.0.1.pem',
