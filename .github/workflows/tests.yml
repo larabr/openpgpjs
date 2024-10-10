@@ -83,6 +83,7 @@ jobs:
       - name: Install dependencies
         # cannot use `--ignore-scripts` since playwright seems to use it to set ENV vars
         run: |
+          ls -la
           npm pkg delete scripts.prepare
           npm ci
 
