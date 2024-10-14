@@ -10,7 +10,11 @@ const sharedBrowserstackCapabilities = {
   build: process.env.GITHUB_SHA || 'local',
   timeout: 450,
   acceptSslCerts: true,
+  acceptInsecureCerts: true,
+  strictSSL: false,
+  'browserstack.acceptSslCerts': true,
   'browserstack.acceptInsecureCerts': true,
+  'browserstack.networkLogs': true, // this is needed for 'acceptInsecureCerts' to actually work
 };
 
 const sharedPlaywrightCIOptions = {
@@ -26,9 +30,10 @@ export default {
   http2: true,
   sslKey: './127.0.0.1-key.pem',
   sslCert: './127.0.0.1.pem',
-  testsStartTimeout: 120000,
+  testsStartTimeout: 240000,
   browserStartTimeout: 120000,
   testsFinishTimeout: 450000,
+  concurrentBrowsers: 1,
   concurrency: 1,
   groups: [
     { name: 'local' }, // group meant to be used with either --browser or --manual options via CLI
