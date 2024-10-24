@@ -57,8 +57,14 @@ jobs:
 
   test-browsers-latest:
     name: Browsers (latest)
-    runs-on: ubuntu-latest
     needs: build
+    strategy:
+      fail-fast: false # if tests for one version fail, continue with the rest
+      matrix:
+        # run on all main platforms to test platform-specific code, if present
+        # (e.g. webkit's WebCrypto API implementation is different in macOS vs Linux)
+        runner: ['ubuntu-latest', 'macos-latest', 'windows-latest']
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@v4
@@ -81,11 +87,13 @@ jobs:
 
       - name: Get Playwright version
         id: playwright-version
+        if: ${{ matrix.runner  != 'windows-latest' }} # the commands don't work in windows
         run: |
           PLAYWRIGHT_VERSION=$(npm ls playwright --depth=0 | grep playwright | sed 's/.*@//')
           echo "version=$PLAYWRIGHT_VERSION" >> $GITHUB_OUTPUT
       - name: Check for cached browsers
         id: cache-playwright-browsers
+        if: ${{ matrix.runner  != 'windows-latest' }}
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
