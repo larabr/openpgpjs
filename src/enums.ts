@@ -2,7 +2,7 @@
  * @module enums
  */
 
-const enumByValue = Symbol('enumByValue');
+const byValue = Symbol('byValue');
 
 /** Maps curve names under various standards to one
  * @see {@link https://wiki.gnupg.org/ECC|ECC - GnuPG wiki}
@@ -61,6 +61,14 @@ export enum s2k {
   argon2 = 4,
   gnu = 101
 }
+
+// export const s2k = {
+//   simple: 0 as const ,
+//   salted: 1 as const,
+//   iterated: 3 as const,
+//   argon2: 4 as const,
+//   gnu: 101 as const
+// };
 
 /** {@link https://tools.ietf.org/html/draft-ietf-openpgp-crypto-refresh-08.html#section-9.1|crypto-refresh RFC, section 9.1}
  * @enum {Integer}
@@ -435,8 +443,9 @@ export enum features {
 }
 
 const enums = {
-  curve: strongReverseEnumMapping(curve),
-  s2k: strongReverseEnumMapping(s2k)
+  // curve: addReversedMappingByValue(curve),
+  s2k: addReversedMappingByValue(s2k),
+  test: (addReversedMappingByValue({ ka: 'a', 'k1': 1}))
 }
 
 /**
@@ -455,12 +464,22 @@ const enums = {
  *   write(enums.curve, enums.publicKey.rsaEncryptSign)
  */
 function strongReverseEnumMapping<const T extends Record<keyof T, PropertyKey>>(enumType: T) {
-  const properlyTypedEnum = enumType as
-      { readonly [K in string & keyof T]: T[K] } & 
-      { readonly [K in keyof T as T[K] extends number ? T[K] : never]: K }
-  return { ...properlyTypedEnum, [enumByValue]: properlyTypedEnum  };
+  const properlyTypedEnum = enumType as { readonly [K in string & keyof T]: T[K] };
+      // { readonly [K in keyof T as T[K] extends number ? T[K] : never]: K }
+  return { ...properlyTypedEnum, [byValue]: properlyTypedEnum  };
 }
-
+function addReversedMappingByValue<const T extends Record<keyof T, PropertyKey>, const K extends keyof T>(e: T): RecordWithReversedMap<T, K> {
+  const map = e//strongReverseEnumMapping(e); // TODO should be redundant with our constant maps above...
+  const reverseMapByValue: Record<T[K], K> = Object.entries<T[K]>(map as Record<K, T[K]>).reduce((acc, [key, value]) => {
+      acc[value] = key as K;
+      return acc;
+    }, {} as Record<T[K], K>);
+    //console.log('byType inter', byType, map);
+  const result = { ...e, [byValue]: reverseMapByValue };
+  //console.log(result)
+  return result;
+}
+type RecordWithReversedMap<T extends Record<keyof T, any>, K extends keyof T> = T & { readonly [byValue]: Record<T[K], K> };
 type Enums = typeof enums[keyof typeof enums]; // curve | s2k | ...
 
 /**
@@ -472,7 +491,7 @@ type Enums = typeof enums[keyof typeof enums]; // curve | s2k | ...
  * @returns {Integer} enum value if it exists
  * @throws {Error} if the value is invalid
  */
-export function write<T extends Enums, K extends keyof T>(type: T, labelOrValue: K) { // this is the same as existing behaviour (since strings werent converted, but maube TODO  | T[K]?
+export function write<const T extends Enums, const K extends keyof T>(type: T, labelOrValue: K) { // this is the same as existing behaviour (since strings werent converted, but maube TODO  | T[K]?
   if (type[labelOrValue] !== undefined) {
     return type[labelOrValue];
   }
@@ -487,22 +506,27 @@ export function write<T extends Enums, K extends keyof T>(type: T, labelOrValue:
    * @returns {String} name of enum value if it exists
    * @throws {Error} if the value is invalid
    */
-export function read<T extends Enums, K extends keyof T>(type: T, enumValue: K | T[K]) {
-    if (!type[byValue]) {
-      type[byValue] = [];
-      Object.entries(type).forEach(([key, value]) => {
-        type[byValue][value] = key;
-      });
-    }
-
-    if (type[byValue][e] !== undefined) {
-      return type[byValue][e];
-    }
-
-    throw new Error('Invalid enum value.');
+export function read<const T extends Record<keyof T, any>, const K extends keyof T>(type: RecordWithReversedMap<T, K>, enumValue: T[K]) {
+  // if (!type[byValue]) {
+  //   type[byValue] = [];
+  //   Object.entries(type).forEach(([key, value]) => {
+  //     type[byValue][value] = key;
+  //   });
+  // }
+  if (type[byValue][enumValue] !== undefined) {
+    return type[byValue][enumValue];
   }
-};
 
+  throw new Error('Invalid enum value.');
+}
+
+const r = read(enums.test, enums.test.k1);
+read(enums.test, enums.s2k.argon2);
+function t(algo: Exclude<typeof enums.test, 'byValue'>[keyof typeof enums.test]) {
+
+}
+t(enums.test.k1)
 // default export needed for backwards compatibility in OpenPGP.js v6
 // it can be dropped in v7
 export default { ...enums, read, write };
+// todooooo store reverse map separately.............. so no TS weirdness is needed
