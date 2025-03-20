@@ -485,13 +485,14 @@ type Enums = typeof enums[keyof typeof enums]; // curve | s2k | ...
 /**
  * Asserts validity of given value and converts from the string label
  * to integer/string value if needed.
- * TOOOOODOOOO use for conversion only, introduce separate `assert` function
+ * TOOOOODOOOO use for conversion only, introduce separate `assert` function? what is write() for
+ * rename read -> getLabel, write -> ??? assert???
  * @param {Object} type target enum type
  * @param {String|Integer} e value to check and/or convert
  * @returns {Integer} enum value if it exists
  * @throws {Error} if the value is invalid
  */
-export function write<const T extends Enums, const K extends keyof T>(type: T, labelOrValue: K) { // this is the same as existing behaviour (since strings werent converted, but maube TODO  | T[K]?
+export function write<const T extends Enums, const K extends keyof T>(type: T, labelOrValue: K) { // this is the same as existing behaviour AS LONG AS TYPE IS AN ENUM, WHICH IT ISNT ATM (since strings werent converted, but maube TODO  | T[K]?
   if (type[labelOrValue] !== undefined) {
     return type[labelOrValue];
   }
