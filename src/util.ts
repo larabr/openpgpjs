@@ -21,10 +21,25 @@
  * This object contains utility functions
  * @module util
  */
+import type * as NodeCryptoNamespace from 'crypto';
 
-import { concat as streamConcat, transform as streamTransform, concatUint8Array, isStream, isUint8Array } from '@openpgp/web-stream-tools';
+type NodeCrypto = typeof NodeCryptoNamespace;
+
+import {
+  // @ts-expect-error missing types
+  concat as streamConcat,
+  // @ts-expect-error missing types
+  transform as streamTransform,
+  // @ts-expect-error missing types
+  concatUint8Array,
+  isStream,
+  // @ts-expect-error missing types
+  isUint8Array,
+  MaybeStream,
+  Stream
+} from '@openpgp/web-stream-tools';
 import { createRequire } from 'module'; // Must be stripped in browser built
-import enums from './enums';
+import enums, { EnumTypes } from './enums';
 import defaultConfig from './config';
 
 const debugMode = (() => {
@@ -35,13 +50,13 @@ const debugMode = (() => {
 })();
 
 const util = {
-  isString: function(data) {
+  isString: (data: any) => {
     return typeof data === 'string' || data instanceof String;
   },
 
   nodeRequire: createRequire(import.meta.url),
 
-  isArray: function(data) {
+  isArray: (data: any) => {
     return data instanceof Array;
   },
 
@@ -56,7 +71,7 @@ const util = {
    * @returns curve implementation
    * @throws on unrecognized curve, or curve not implemented by noble-curve
    */
-  getNobleCurve: async (publicKeyAlgo, curveName) => {
+  getNobleCurve: async (publicKeyAlgo: EnumTypes['publicKey'], curveName: EnumTypes['curve']) => {
     if (!defaultConfig.useEllipticFallback) {
       throw new Error('This curve is only supported in the full build of OpenPGP.js');
     }
@@ -78,7 +93,7 @@ const util = {
     }
   },
 
-  readNumber: function (bytes) {
+  readNumber: (bytes: Uint8Array) => {
     let n = 0;
     for (let i = 0; i < bytes.length; i++) {
       n += (256 ** i) * bytes[bytes.length - 1 - i];
@@ -86,28 +101,28 @@ const util = {
     return n;
   },
 
-  writeNumber: function (n, bytes) {
-    const b = new Uint8Array(bytes);
-    for (let i = 0; i < bytes; i++) {
-      b[i] = (n >> (8 * (bytes - i - 1))) & 0xFF;
+  writeNumber: (n: number, byteLength: number) => {
+    const b = new Uint8Array(byteLength);
+    for (let i = 0; i < byteLength; i++) {
+      b[i] = (n >> (8 * (byteLength - i - 1))) & 0xFF;
     }
 
     return b;
   },
 
-  readDate: function (bytes) {
+  readDate: (bytes: Uint8Array) => {
     const n = util.readNumber(bytes);
     const d = new Date(n * 1000);
     return d;
   },
 
-  writeDate: function (time) {
+  writeDate: (time: Date) => {
     const numeric = Math.floor(time.getTime() / 1000);
 
     return util.writeNumber(numeric, 4);
   },
 
-  normalizeDate: function (time = Date.now()) {
+  normalizeDate: (time = Date.now()) => {
     return time === null || time === Infinity ? time : new Date(Math.floor(+time / 1000) * 1000);
   },
 
@@ -116,7 +131,7 @@ const util = {
    * @param {Uint8Array} bytes - Input data to parse
    * @returns {Uint8Array} Parsed MPI.
    */
-  readMPI: function (bytes) {
+  readMPI: (bytes: Uint8Array) => {
     const bits = (bytes[0] << 8) | bytes[1];
     const bytelen = (bits + 7) >>> 3;
     // There is a decryption oracle risk here by enforcing the MPI length using `readExactSubarray` in the context of SEIPDv1 encrypted signatures,
@@ -130,11 +145,11 @@ const util = {
   /**
    * Read exactly `end - start` bytes from input.
    * This is a stricter version of `.subarray`.
-   * @param {Uint8Array} input - Input data to parse
-   * @returns {Uint8Array} subarray of size always equal to `end - start`
+   * @param input - Input data to parse
+   * @returns subarray of size always equal to `end - start`
    * @throws if the input array is too short.
    */
-  readExactSubarray: function (input, start, end) {
+  readExactSubarray: (input: Uint8Array, start: number, end: number) => {
     if (input.length < (end - start)) {
       throw new Error('Input array too short');
     }
@@ -143,11 +158,11 @@ const util = {
 
   /**
    * Left-pad Uint8Array to length by adding 0x0 bytes
-   * @param {Uint8Array} bytes - Data to pad
-   * @param {Number} length - Padded length
-   * @returns {Uint8Array} Padded bytes.
+   * @param bytes - Data to pad
+   * @param length - Padded length
+   * @returns Padded bytes.
    */
-  leftPad(bytes, length) {
+  leftPad: (bytes: Uint8Array, length: number) => {
     if (bytes.length > length) {
       throw new Error('Input array too long');
     }
@@ -159,10 +174,10 @@ const util = {
 
   /**
    * Convert a Uint8Array to an MPI-formatted Uint8Array.
-   * @param {Uint8Array} bin - An array of 8-bit integers to convert
-   * @returns {Uint8Array} MPI-formatted Uint8Array.
+   * @param bin - An array of 8-bit integers to convert
+   * @returns MPI-formatted Uint8Array.
    */
-  uint8ArrayToMPI: function (bin) {
+  uint8ArrayToMPI: (bin: Uint8Array) => {
     const bitSize = util.uint8ArrayBitLength(bin);
     if (bitSize === 0) {
       throw new Error('Zero MPI');
@@ -174,10 +189,10 @@ const util = {
 
   /**
    * Return bit length of the input data
-   * @param {Uint8Array} bin input data (big endian)
+   * @param bin input data (big endian)
    * @returns bit length
    */
-  uint8ArrayBitLength: function (bin) {
+  uint8ArrayBitLength: (bin: Uint8Array) => {
     let i; // index of leading non-zero byte
     for (i = 0; i < bin.length; i++) if (bin[i] !== 0) break;
     if (i === bin.length) {
@@ -192,7 +207,7 @@ const util = {
    * @param {String} hex - A hex string to convert
    * @returns {Uint8Array} An array of 8-bit integers.
    */
-  hexToUint8Array: function (hex) {
+  hexToUint8Array: (hex: string) => {
     const result = new Uint8Array(hex.length >> 1);
     for (let k = 0; k < hex.length >> 1; k++) {
       result[k] = parseInt(hex.substr(k << 1, 2), 16);
@@ -205,7 +220,7 @@ const util = {
    * @param {Uint8Array} bytes - Array of 8-bit integers to convert
    * @returns {String} Hexadecimal representation of the array.
    */
-  uint8ArrayToHex: function (bytes) {
+  uint8ArrayToHex: (bytes: Uint8Array) => {
     const hexAlphabet = '0123456789abcdef';
     let s = '';
     bytes.forEach(v => { s += hexAlphabet[v >> 4] + hexAlphabet[v & 15]; });
@@ -214,35 +229,34 @@ const util = {
 
   /**
    * Convert a string to an array of 8-bit integers
-   * @param {String} str - String to convert
-   * @returns {Uint8Array} An array of 8-bit integers.
+   * @param str - String to convert
+   * @returns An array of 8-bit integers.
    */
-  stringToUint8Array: function (str) {
-    return streamTransform(str, str => {
-      if (!util.isString(str)) {
-        throw new Error('stringToUint8Array: Data must be in the form of a string');
-      }
+  stringToUint8Array: (str: string) => {
+    if (!util.isString(str)) {
+      throw new Error('stringToUint8Array: Data must be in the form of a string');
+    }
 
-      const result = new Uint8Array(str.length);
-      for (let i = 0; i < str.length; i++) {
-        result[i] = str.charCodeAt(i);
-      }
-      return result;
-    });
+    const result = new Uint8Array(str.length);
+    for (let i = 0; i < str.length; i++) {
+      result[i] = str.charCodeAt(i);
+    }
+    return result;
   },
 
   /**
    * Convert an array of 8-bit integers to a string
-   * @param {Uint8Array} bytes - An array of 8-bit integers to convert
-   * @returns {String} String representation of the array.
+   * @param bytes - An array of 8-bit integers to convert
+   * @returns String representation of the array.
    */
-  uint8ArrayToString: function (bytes) {
+  uint8ArrayToString: (bytes: Uint8Array) => {
     bytes = new Uint8Array(bytes);
     const result = [];
     const bs = 1 << 14;
     const j = bytes.length;
 
     for (let i = 0; i < j; i += bs) {
+      // @ts-ignore number[] expected over Uint8Array
       result.push(String.fromCharCode.apply(String, bytes.subarray(i, i + bs < j ? i + bs : j)));
     }
     return result.join('');
@@ -253,13 +267,11 @@ const util = {
    * @param {String|ReadableStream} str - The string to convert
    * @returns {Uint8Array|ReadableStream} A valid squence of utf8 bytes.
    */
-  encodeUTF8: function (str) {
-    const encoder = new TextEncoder('utf-8');
-    // eslint-disable-next-line no-inner-declarations
-    function process(value, lastChunk = false) {
-      return encoder.encode(value, { stream: !lastChunk });
-    }
-    return streamTransform(str, process, () => process('', true));
+  encodeUTF8: <T extends MaybeStream<string>>(str: T): T extends string ? Uint8Array : Stream<Uint8Array> => {
+    const encoder = new TextEncoder();
+    const process = (value: string) => encoder.encode(value);
+
+    return streamTransform(str, process, () => process(''));
   },
 
   /**
@@ -267,12 +279,11 @@ const util = {
    * @param {Uint8Array|ReadableStream} utf8 - A valid squence of utf8 bytes
    * @returns {String|ReadableStream} A native javascript string.
    */
-  decodeUTF8: function (utf8) {
+  decodeUTF8: <T extends MaybeStream<Uint8Array>>(utf8: T): T extends Uint8Array ? string : Stream<string> => {
     const decoder = new TextDecoder('utf-8');
-    // eslint-disable-next-line no-inner-declarations
-    function process(value, lastChunk = false) {
-      return decoder.decode(value, { stream: !lastChunk });
-    }
+    const process = (value: Uint8Array, lastChunk = false) => (
+      decoder.decode(value, { stream: !lastChunk })
+    );
     return streamTransform(utf8, process, () => process(new Uint8Array(), true));
   },
 
@@ -293,11 +304,11 @@ const util = {
 
   /**
    * Check Uint8Array equality
-   * @param {Uint8Array} array1 - First array
-   * @param {Uint8Array} array2 - Second array
-   * @returns {Boolean} Equality.
+   * @param array1 - First array
+   * @param array2 - Second array
+   * @returns Equality.
    */
-  equalsUint8Array: function (array1, array2) {
+  equalsUint8Array: (array1: Uint8Array, array2: Uint8Array) => {
     if (!util.isUint8Array(array1) || !util.isUint8Array(array2)) {
       throw new Error('Data must be in the form of a Uint8Array');
     }
@@ -317,13 +328,13 @@ const util = {
   /**
    * Calculates a 16bit sum of a Uint8Array by adding each character
    * codes modulus 65535
-   * @param {Uint8Array} Uint8Array - To create a sum of
-   * @returns {Uint8Array} 2 bytes containing the sum of all charcodes % 65535.
+   * @param data - To create a sum of
+   * @returns 2 bytes containing the sum of all charcodes % 65535.
    */
-  writeChecksum: function (text) {
+  writeChecksum: (data: Uint8Array) => {
     let s = 0;
-    for (let i = 0; i < text.length; i++) {
-      s = (s + text[i]) & 0xFFFF;
+    for (let i = 0; i < data.length; i++) {
+      s = (s + data[i]) & 0xFFFF;
     }
     return util.writeNumber(s, 2);
   },
@@ -331,9 +342,9 @@ const util = {
   /**
    * Helper function to print a debug message. Debug
    * messages are only printed if
-   * @param {String} str - String of the debug message
+   * @param str - String of the debug message
    */
-  printDebug: function (str) {
+  printDebug: (str: string) => {
     if (debugMode) {
       console.log('[OpenPGP.js debug]', str);
     }
@@ -342,16 +353,16 @@ const util = {
   /**
    * Helper function to print a debug error. Debug
    * messages are only printed if
-   * @param {String} str - String of the debug message
+   * @param str - String of the debug message
    */
-  printDebugError: function (error) {
+  printDebugError: (error: Error) => {
     if (debugMode) {
       console.error('[OpenPGP.js debug]', error);
     }
   },
 
   // returns bit length of the integer x
-  nbits: function (x) {
+  nbits: (x: number) => {
     let r = 1;
     let t = x >>> 16;
     if (t !== 0) {
@@ -388,9 +399,9 @@ const util = {
    *
    * Both OCB and EAX (through CMAC) require this function to be constant-time.
    *
-   * @param {Uint8Array} data
+   * @param data
    */
-  double: function(data) {
+  double: (data: Uint8Array) => {
     const doubleVar = new Uint8Array(data.length);
     const last = data.length - 1;
     for (let i = 0; i < last; i++) {
@@ -402,12 +413,15 @@ const util = {
 
   /**
    * Shift a Uint8Array to the right by n bits
-   * @param {Uint8Array} array - The array to shift
-   * @param {Integer} bits - Amount of bits to shift (MUST be smaller
-   * than 8)
-   * @returns {String} Resulting array.
+   * @param array - The array to shift
+   * @param bits - Amount of bits to shift (MUST be smaller than 8)
+   * @returns Resulting array.
    */
-  shiftRight: function (array, bits) {
+  shiftRight: (array: Uint8Array, bits: number) => {
+    if (bits < 0 || bits > 8) {
+      throw new Error('Invalid bits input: must be withing 0 and 8');
+    }
+
     if (bits) {
       for (let i = array.length - 1; i >= 0; i--) {
         array[i] >>= bits;
@@ -424,26 +438,26 @@ const util = {
    * @returns {Object} The SubtleCrypto API
    * @throws if the API is not available
    */
-  getWebCrypto: function() {
+  getWebCrypto: (): SubtleCrypto => {
     const globalWebCrypto = typeof globalThis !== 'undefined' && globalThis.crypto && globalThis.crypto.subtle;
     // Fallback for Node 16, which does not expose WebCrypto as a global
-    const webCrypto = globalWebCrypto || this.getNodeCrypto()?.webcrypto.subtle;
+    const webCrypto = globalWebCrypto || util.getNodeCrypto()?.webcrypto.subtle;
     if (!webCrypto) {
       throw new Error('The WebCrypto API is not available');
     }
-    return webCrypto;
+    return webCrypto as SubtleCrypto;
   },
 
   /**
    * Get native Node.js crypto api.
    * @returns {Object} The crypto module or 'undefined'.
    */
-  getNodeCrypto: function() {
-    return this.nodeRequire('crypto');
+  getNodeCrypto: (): NodeCrypto | undefined => {
+    return util.nodeRequire('crypto');
   },
 
-  getNodeZlib: function() {
-    return this.nodeRequire('zlib');
+  getNodeZlib: () => {
+    return util.nodeRequire('zlib');
   },
 
   /**
@@ -451,16 +465,16 @@ const util = {
    * Buffer is not available under browserify.
    * @returns {Function} The Buffer constructor or 'undefined'.
    */
-  getNodeBuffer: function() {
-    return (this.nodeRequire('buffer') || {}).Buffer;
+  getNodeBuffer: (): Buffer | undefined => {
+    return (util.nodeRequire('buffer') || {}).Buffer;
   },
 
-  getHardwareConcurrency: function() {
+  getHardwareConcurrency: (): number => {
     if (typeof navigator !== 'undefined') {
       return navigator.hardwareConcurrency || 1;
     }
 
-    const os = this.nodeRequire('os'); // Assume we're on Node.js.
+    const os = util.nodeRequire('os'); // Assume we're on Node.js.
     return os.cpus().length;
   },
 
@@ -473,24 +487,25 @@ const util = {
    * These checks are not meant to be exhaustive; applications are strongly encouraged to implement stricter validation,
    * e.g. based on the W3C HTML spec (https://html.spec.whatwg.org/multipage/input.html#email-state-(type=email)).
    */
-  isEmailAddress: function(data) {
+  isEmailAddress: (data: any) => {
     if (!util.isString(data)) {
       return false;
     }
+
     const re = /^[^\p{C}\p{Z}@<>\\]+@[^\p{C}\p{Z}@<>\\]+[^\p{C}\p{Z}\p{P}]$/u;
-    return re.test(data);
+    return (data instanceof String) ? data.match(re) : re.test(data);
   },
 
   /**
    * Normalize line endings to <CR><LF>
    * Support any encoding where CR=0x0D, LF=0x0A
    */
-  canonicalizeEOL: function(data) {
+  canonicalizeEOL: (data: Uint8Array) => {
     const CR = 13;
     const LF = 10;
     let carryOverCR = false;
 
-    return streamTransform(data, bytes => {
+    return streamTransform(data, (bytes: Uint8Array) => {
       if (carryOverCR) {
         bytes = util.concatUint8Array([new Uint8Array([CR]), bytes]);
       }
@@ -535,12 +550,12 @@ const util = {
    * Convert line endings from canonicalized <CR><LF> to native <LF>
    * Support any encoding where CR=0x0D, LF=0x0A
    */
-  nativeEOL: function(data) {
+  nativeEOL: (data: Uint8Array) => {
     const CR = 13;
     const LF = 10;
     let carryOverCR = false;
 
-    return streamTransform(data, bytes => {
+    return streamTransform(data, (bytes: Uint8Array) => {
       if (carryOverCR && bytes[0] !== LF) {
         bytes = util.concatUint8Array([new Uint8Array([CR]), bytes]);
       } else {
@@ -570,7 +585,7 @@ const util = {
   /**
    * Remove trailing spaces, carriage returns and tabs from each line
    */
-  removeTrailingSpaces: function(text) {
+  removeTrailingSpaces: (text: string) => {
     return text.split('\n').map(line => {
       let i = line.length - 1;
       for (; i >= 0 && (line[i] === ' ' || line[i] === '\t' || line[i] === '\r'); i--);
@@ -578,7 +593,7 @@ const util = {
     }).join('\n');
   },
 
-  wrapError: function(message, error) {
+  wrapError: function(message: string, error: Error) {
     if (!error) {
       return new Error(message);
     }
@@ -594,11 +609,10 @@ const util = {
   /**
    * Map allowed packet tags to corresponding classes
    * Meant to be used to format `allowedPacket` for Packetlist.read
-   * @param {Array<Object>} allowedClasses
    * @returns {Object} map from enum.packet to corresponding *Packet class
    */
-  constructAllowedPackets: function(allowedClasses) {
-    const map = {};
+  constructAllowedPackets: <const PacketClassType extends { new(): any; tag: EnumTypes['packet'] }>(allowedClasses: PacketClassType[]) => {
+    const map = {} as Record<EnumTypes['packet'], PacketClassType>;
     allowedClasses.forEach(PacketClass => {
       if (!PacketClass.tag) {
         throw new Error('Invalid input: expected a packet class');
@@ -612,13 +626,12 @@ const util = {
    * Return a Promise that will resolve as soon as one of the promises in input resolves
    * or will reject if all input promises all rejected
    * (similar to Promise.any, but with slightly different error handling)
-   * @param {Array<Promise>} promises
-   * @return {Promise<Any>} Promise resolving to the result of the fastest fulfilled promise
+   * @return Promise resolving to the result of the fastest fulfilled promise
    *                          or rejected with the Error of the last resolved Promise (if all promises are rejected)
    */
-  anyPromise: function(promises) {
+  anyPromise: <T>(promises: Promise<T>[]) => {
     // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
+    return new Promise<T>(async (resolve, reject) => {
       let exception;
       await Promise.all(promises.map(async promise => {
         try {
@@ -633,38 +646,38 @@ const util = {
 
   /**
    * Return either `a` or `b` based on `cond`, in algorithmic constant time.
-   * @param {Boolean} cond
-   * @param {Uint8Array} a
-   * @param {Uint8Array} b
    * @returns `a` if `cond` is true, `b` otherwise
    */
-  selectUint8Array: function(cond, a, b) {
+  selectUint8Array: (cond: boolean, a: Uint8Array, b: Uint8Array) => {
     const length = Math.max(a.length, b.length);
     const result = new Uint8Array(length);
+    const condBit = boolToBit(cond);
+
     let end = 0;
     for (let i = 0; i < result.length; i++) {
-      result[i] = (a[i] & (256 - cond)) | (b[i] & (255 + cond));
-      end += (cond & i < a.length) | ((1 - cond) & i < b.length);
+      result[i] = (a[i] & (256 - condBit)) | (b[i] & (255 + condBit));
+      end += (condBit & boolToBit(i < a.length)) | ((1 - condBit) & boolToBit(i < b.length));
     }
     return result.subarray(0, end);
   },
   /**
    * Return either `a` or `b` based on `cond`, in algorithmic constant time.
    * NB: it only supports `a, b` with values between 0-255.
-   * @param {Boolean} cond
-   * @param {Uint8} a
-   * @param {Uint8} b
    * @returns `a` if `cond` is true, `b` otherwise
    */
-  selectUint8: function(cond, a, b) {
-    return (a & (256 - cond)) | (b & (255 + cond));
+  selectUint8: (cond: boolean, a: number, b: number) => {
+    if (a < 0 || a > 255 || b < 0 || a > 255) {
+      throw new Error('Invalid uint8 input: value between 0-255 expected');
+    }
+    const condBit = boolToBit(cond);
+    return (a & (256 - condBit)) | (b & (255 + condBit));
   },
-  /**
-   * @param {module:enums.symmetric} cipherAlgo
-   */
-  isAES: function(cipherAlgo) {
+
+  isAES: (cipherAlgo: EnumTypes['symmetric']) => {
     return cipherAlgo === enums.symmetric.aes128 || cipherAlgo === enums.symmetric.aes192 || cipherAlgo === enums.symmetric.aes256;
   }
 };
 
 export default util;
+
+const boolToBit = (bool: boolean): 0 | 1 => (+bool as 0 | 1);
