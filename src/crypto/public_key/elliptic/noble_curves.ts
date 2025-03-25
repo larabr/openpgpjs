@@ -13,7 +13,7 @@ import { brainpoolP256r1 } from './brainpool/brainpoolP256r1';
 import { brainpoolP384r1 } from './brainpool/brainpoolP384r1';
 import { brainpoolP512r1 } from './brainpool/brainpoolP512r1';
 
-export const nobleCurves = new Map(Object.entries({
+export const nobleCurves = {
   nistP256,
   nistP384,
   nistP521,
@@ -22,6 +22,10 @@ export const nobleCurves = new Map(Object.entries({
   brainpoolP512r1,
   secp256k1,
   x448,
-  ed448
-}));
+  ed448,
+  // tweetnacl used for curve 25519
+  curve25519Legacy: false,
+  ed25519Legacy: false
+} as const;
 
+export type NobleCurves = typeof nobleCurves;

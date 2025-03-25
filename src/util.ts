@@ -22,8 +22,8 @@
  * @module util
  */
 import type * as NodeCryptoNamespace from 'crypto';
-
 type NodeCrypto = typeof NodeCryptoNamespace;
+import type { NobleCurves } from './crypto/public_key/elliptic/noble_curves';
 
 import {
   // @ts-expect-error missing types
@@ -39,7 +39,7 @@ import {
   Stream
 } from '@openpgp/web-stream-tools';
 import { createRequire } from 'module'; // Must be stripped in browser built
-import enums, { EnumTypes } from './enums';
+import enums, { EnumLabels, EnumTypes, EnumValueToLabel } from './enums';
 import defaultConfig from './config';
 
 const debugMode = (() => {
@@ -60,7 +60,7 @@ const util = {
     return data instanceof Array;
   },
 
-  isUint8Array: isUint8Array,
+  isUint8Array: isUint8Array as (input: any) => input is Uint8Array,
 
   isStream: isStream,
 
@@ -71,7 +71,7 @@ const util = {
    * @returns curve implementation
    * @throws on unrecognized curve, or curve not implemented by noble-curve
    */
-  getNobleCurve: async (publicKeyAlgo: EnumTypes['publicKey'], curveName: EnumTypes['curve']) => {
+  getNobleCurve: async <A extends EnumTypes['publicKey'], C extends EnumTypes['curve'] | undefined = undefined>(publicKeyAlgo: A, curveName?: C): Promise<C extends EnumTypes['curve'] ? NobleCurves[C] : (EnumValueToLabel['publicKey'][A] extends keyof NobleCurves ? NobleCurves[EnumValueToLabel['publicKey'][A]] : never) > => {
     if (!defaultConfig.useEllipticFallback) {
       throw new Error('This curve is only supported in the full build of OpenPGP.js');
     }
@@ -80,14 +80,17 @@ const util = {
     switch (publicKeyAlgo) {
       case enums.publicKey.ecdh:
       case enums.publicKey.ecdsa: {
-        const curve = nobleCurves.get(curveName);
+        if (!curveName) {
+          throw new Error('Missing `curveName` input');
+        }
+        const curve = nobleCurves[curveName];
         if (!curve) throw new Error('Unsupported curve');
-        return curve;
+        return curve as C extends EnumTypes['curve'] ? NobleCurves[C] : EnumValueToLabel['publicKey'][A] extends keyof NobleCurves ? NobleCurves[EnumValueToLabel['publicKey'][A]] : never;
       }
       case enums.publicKey.x448:
-        return nobleCurves.get('x448');
+        return nobleCurves.x448 as C extends EnumTypes['curve'] ? NobleCurves[C] : (EnumValueToLabel['publicKey'][A] extends keyof NobleCurves ? NobleCurves[EnumValueToLabel['publicKey'][A]] : never);
       case enums.publicKey.ed448:
-        return nobleCurves.get('ed448');
+        return nobleCurves.ed448 as C extends EnumTypes['curve'] ? NobleCurves[C] : (EnumValueToLabel['publicKey'][A] extends keyof NobleCurves ? NobleCurves[EnumValueToLabel['publicKey'][A]] : never);
       default:
         throw new Error('Unsupported curve');
     }
