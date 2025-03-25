@@ -522,8 +522,19 @@ export type EnumTypes = {
 };
 
 type EnumValues<T extends Enums> = T[keyof T];
+type EnumKeys<T extends Enums> = keyof T;
+export type EnumLabels = {
+  [K in keyof typeof enums]: EnumKeys<typeof enums[K]>
+};
+
+type ReverseEnum<E extends Record<string, PropertyKey>> = {
+  [K in keyof E as E[K]]: K
+};
+export type EnumValueToLabel = {
+  [K in keyof typeof enums]: ReverseEnum<typeof enums[K]>
+};
 
 // default export needed for backwards compatibility in OpenPGP.js v6
 // it can be dropped in v7
-export default { ...enums, read, write };
+export default enums;
 // todooooo store reverse map separately.............. so no TS weirdness is needed
