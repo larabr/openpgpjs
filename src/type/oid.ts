@@ -33,9 +33,9 @@
  */
 
 import util from '../util';
-import enums from '../enums';
+import enums, { EnumTypes } from '../enums';
 
-const knownOIDs = {
+const knownOIDs: Record<string, EnumTypes['curve']> = {
   '2a8648ce3d030107': enums.curve.nistP256,
   '2b81040022': enums.curve.nistP384,
   '2b81040023': enums.curve.nistP521,
@@ -45,12 +45,13 @@ const knownOIDs = {
   '2b2403030208010107': enums.curve.brainpoolP256r1,
   '2b240303020801010b': enums.curve.brainpoolP384r1,
   '2b240303020801010d': enums.curve.brainpoolP512r1
-};
+} as const;
 
 class OID {
-  constructor(oid) {
+  private oid: Uint8Array | '';
+  constructor(oid?: OID | Uint8Array | Array<number>) {
     if (oid instanceof OID) {
-      this.oid = oid.oid;
+      throw new Error('Unexpected OID input') // TODO drop if not thrown
     } else if (util.isArray(oid) ||
                util.isUint8Array(oid)) {
       oid = new Uint8Array(oid);
@@ -62,7 +63,7 @@ class OID {
       }
       this.oid = oid;
     } else {
-      this.oid = '';
+      this.oid = ''; // TODO refactor to avoid empty constructor
     }
   }
 
@@ -71,7 +72,7 @@ class OID {
    * @param {Uint8Array} input - Where to read the OID from
    * @returns {Number} Number of read bytes.
    */
-  read(input) {
+  read(input: Uint8Array) {
     if (input.length >= 1) {
       const length = input[0];
       if (input.length >= 1 + length) {
@@ -87,6 +88,9 @@ class OID {
    * @returns {Uint8Array} Array with the serialized value the OID.
    */
   write() {
+    if (!this.oid) {
+      throw new Error('Empty OID');
+    }
     return util.concatUint8Array([new Uint8Array([this.oid.length]), this.oid]);
   }
 
@@ -95,6 +99,9 @@ class OID {
    * @returns {string} String with the hex value of the OID.
    */
   toHex() {
+    if (!this.oid) {
+      throw new Error('Empty OID');
+    }
     return util.uint8ArrayToHex(this.oid);
   }
 
