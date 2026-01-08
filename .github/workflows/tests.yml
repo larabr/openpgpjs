@@ -14,6 +14,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
+        with:
+          # set node version to keep track of the min version needed to build the lib (via --engine-strict below)
+          node-version: 20.x
       - name: Check for cached folders
         id: cache-full
         uses: actions/cache@v5
@@ -88,7 +91,7 @@ jobs:
         # cannot use `--ignore-scripts` since playwright seems to use it to set ENV vars
         run: |
           npm pkg delete scripts.prepare
-          npm ci
+          npm ci --engine-strict
 
       - name: Get Playwright version and cache location
         id: playwright-version
