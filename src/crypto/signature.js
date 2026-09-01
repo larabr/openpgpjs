@@ -4,7 +4,7 @@
  * @access private
  */
 
-import { elliptic, rsa, dsa, postQuantum } from './public_key/index.js';
+import { elliptic, rsa, getLegacyPublicKeyAlgorithm, postQuantum } from './public_key/index.js';
 import enums from '../enums.ts';
 import util from '../util.js';
 import { UnsupportedError } from '../packet/packet.js';
@@ -104,6 +104,7 @@ export async function verify(algo, hashAlgo, signature, publicParams, data, hash
     case enums.publicKey.dsa: {
       const { g, p, q, y } = publicParams;
       const { r, s } = signature; // no need to pad, since we always handle them as BigIntegers
+      const dsa = await getLegacyPublicKeyAlgorithm(enums.publicKey.dsa);
       return dsa.verify(hashAlgo, r, s, hashed, g, p, q, y);
     }
     case enums.publicKey.ecdsa: {
@@ -185,6 +186,7 @@ export async function sign(algo, hashAlgo, publicKeyParams, privateKeyParams, da
     case enums.publicKey.dsa: {
       const { g, p, q } = publicKeyParams;
       const { x } = privateKeyParams;
+      const dsa = await getLegacyPublicKeyAlgorithm(enums.publicKey.dsa);
       return dsa.sign(hashAlgo, hashed, g, p, q, x);
     }
     case enums.publicKey.elgamal:

@@ -20,8 +20,8 @@
  * @module crypto/public_key/prime
  * @access private
  */
-import { bitLength, getBit, mod, modExp } from '../biginteger.ts';
-import { getRandomBigInteger } from '../random.js';
+import { bitLength, getBit, mod, modExp } from '../../biginteger.ts';
+import { getRandomBigInteger } from '../../random.js';
 
 const _1n = BigInt(1);
 

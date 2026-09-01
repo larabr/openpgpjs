@@ -24,7 +24,7 @@
  * @access private
  */
 
-import { rsa, elliptic, elgamal, dsa, postQuantum } from './public_key/index.js';
+import { rsa, elliptic, getLegacyPublicKeyAlgorithm, postQuantum } from './public_key/index.js';
 import { getRandomBytes } from './random.js';
 import { getCipherParams } from './cipher/index.js';
 import ECDHSymkey from '../type/ecdh_symkey.js';
@@ -56,6 +56,7 @@ export async function publicKeyEncrypt(keyAlgo, symmetricAlgo, publicParams, dat
     }
     case enums.publicKey.elgamal: {
       const { p, g, y } = publicParams;
+      const elgamal = await getLegacyPublicKeyAlgorithm(enums.publicKey.elgamal);
       return elgamal.encrypt(data, p, g, y);
     }
     case enums.publicKey.ecdh: {
@@ -114,6 +115,7 @@ export async function publicKeyDecrypt(keyAlgo, publicKeyParams, privateKeyParam
       const { c1, c2 } = sessionKeyParams;
       const p = publicKeyParams.p;
       const x = privateKeyParams.x;
+      const elgamal = await getLegacyPublicKeyAlgorithm(enums.publicKey.elgamal);
       return elgamal.decrypt(c1, c2, p, x, randomPayload);
     }
     case enums.publicKey.ecdh: {
@@ -466,11 +468,13 @@ export async function validateParams(algo, publicParams, privateParams) {
     case enums.publicKey.dsa: {
       const { p, q, g, y } = publicParams;
       const { x } = privateParams;
+      const dsa = await getLegacyPublicKeyAlgorithm(enums.publicKey.dsa);
       return dsa.validateParams(p, q, g, y, x);
     }
     case enums.publicKey.elgamal: {
       const { p, g, y } = publicParams;
       const { x } = privateParams;
+      const elgamal = await getLegacyPublicKeyAlgorithm(enums.publicKey.elgamal);
       return elgamal.validateParams(p, g, y, x);
     }
     case enums.publicKey.ecdsa:
