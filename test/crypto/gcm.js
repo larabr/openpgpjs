@@ -7,7 +7,7 @@ import openpgp from '../initOpenpgp.js';
 import * as crypto from '../../src/crypto/index.js';
 import util from '../../src/util.js';
 
-export default () => describe('Symmetric AES-GCM (experimental)', function() {
+export default () => describe('Symmetric AES-GCM', function() {
   let sinonSandbox;
   let getWebCryptoStub;
 
