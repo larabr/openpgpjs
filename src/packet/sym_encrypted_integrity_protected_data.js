@@ -323,6 +323,11 @@ export async function runAEAD(packet, fn, key, data) {
             nonce[iv.length - 8 + i] ^= chunkIndexArray[i];
           }
         }
+        // AES-GCM must not be used for more than 2^32 invocations (chunks) under the same key;
+        // OCB and EAX have much larger limits, so no equivalent check is needed for them.
+        if ((packet.aeadAlgorithm === enums.aead.gcm || packet.aeadAlgorithm === enums.aead.experimentalGCM) && chunkIndex >= 2 ** 32) {
+          throw new Error('Exceeded max number of AES-GCM chunks');
+        }
         if (!chunkIndex || chunk.length) {
           reader.unshift(finalChunk);
           cryptedPromise = modeInstance[fn](chunk, nonce, adataArray);
@@ -349,9 +354,9 @@ export async function runAEAD(packet, fn, key, data) {
         }
         if (!done) {
           if (isSEIPDv2) { // SEIPD V2
-            ivView.setInt32(iv.length - 4, ++chunkIndex); // Should be setInt64(iv.length - 8, ...)
+            setInt64(ivView, iv.length - 8, ++chunkIndex);
           } else { // AEADEncryptedDataPacket
-            adataView.setInt32(5 + 4, ++chunkIndex); // Should be setInt64(5, ...)
+            setInt64(adataView, 5, ++chunkIndex);
           }
         } else {
           await writer.close();
