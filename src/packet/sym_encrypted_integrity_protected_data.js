@@ -233,6 +233,22 @@ class SymEncryptedIntegrityProtectedDataPacket {
 export default SymEncryptedIntegrityProtectedDataPacket;
 
 /**
+ * Store `value` in the 64-bit big-endian field at `byteOffset` of `view`.
+ * @param {DataView} view
+ * @param {Number} byteOffset - Offset of the 64-bit field
+ * @param {Number} value - Value to store (a safe integer)
+ */
+function setInt64(view, byteOffset, value) {
+  if (value <= 0xFFFFFFFF) {
+    view.setUint32(byteOffset, 0);
+    view.setUint32(byteOffset + 4, value);
+  } else {
+    view.setUint32(byteOffset, Number(BigInt(value) >> 32n));
+    view.setUint32(byteOffset + 4, value >>> 0);
+  }
+}
+
+/**
  * En/decrypt the payload.
  * @param {encrypt|decrypt} fn - Whether to encrypt or decrypt
  * @param {Uint8Array} key - The session key used to en/decrypt the payload
@@ -316,7 +332,7 @@ export async function runAEAD(packet, fn, key, data) {
           // After the last chunk, we either encrypt a final, empty
           // data chunk to get the final authentication tag or
           // validate that final authentication tag.
-          adataView.setInt32(5 + chunkIndexSizeIfAEADEP + 4, cryptedBytes); // Should be setInt64(5 + chunkIndexSizeIfAEADEP, ...)
+          setInt64(adataView, 5 + chunkIndexSizeIfAEADEP, cryptedBytes);
           cryptedPromise = modeInstance[fn](finalChunk, nonce, adataTagArray);
           cryptedPromise.catch(() => {});
           queuedBytes += tagLengthIfEncrypting;
