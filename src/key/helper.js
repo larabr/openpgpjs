@@ -9,7 +9,7 @@ import {
   SecretSubkeyPacket,
   SignaturePacket
 } from '../packet/index.js';
-import enums from '../enums.ts';
+import enums, { assertEnum } from '../enums.ts';
 import { getPreferredCurveHashAlgo, getHashByteLength, publicKey } from '../crypto/index.js';
 import util from '../util.js';
 import defaultConfig from '../config.ts';
@@ -17,7 +17,7 @@ import defaultConfig from '../config.ts';
 export async function generateSecretSubkey(options, config) {
   const secretSubkeyPacket = new SecretSubkeyPacket(options.date, config);
   secretSubkeyPacket.packets = null;
-  secretSubkeyPacket.algorithm = enums.write(enums.publicKey, options.algorithm);
+  secretSubkeyPacket.algorithm = assertEnum(enums.publicKey, options.algorithm);
   await secretSubkeyPacket.generate(options.rsaBits, options.curve);
   await secretSubkeyPacket.computeFingerprintAndKeyID();
   return secretSubkeyPacket;
@@ -26,7 +26,7 @@ export async function generateSecretSubkey(options, config) {
 export async function generateSecretKey(options, config) {
   const secretKeyPacket = new SecretKeyPacket(options.date, config);
   secretKeyPacket.packets = null;
-  secretKeyPacket.algorithm = enums.write(enums.publicKey, options.algorithm);
+  secretKeyPacket.algorithm = assertEnum(enums.publicKey, options.algorithm);
   await secretKeyPacket.generate(options.rsaBits, options.curve, options.config);
   await secretKeyPacket.computeFingerprintAndKeyID();
   return secretKeyPacket;
@@ -135,7 +135,7 @@ export async function getPreferredHashAlgo(targetKeys, signingKeyPacket, date = 
     for (const hashAlgo of supportedAlgos) {
       try {
         // ensure that `hashAlgo` is recognized/implemented by us, otherwise e.g. `getHashByteLength` will throw later on
-        const supportedAlgo = enums.write(enums.hash, hashAlgo);
+        const supportedAlgo = assertEnum(enums.hash, hashAlgo);
         supportedAlgosMap.set(
           supportedAlgo,
           supportedAlgosMap.has(supportedAlgo) ? supportedAlgosMap.get(supportedAlgo) + 1 : 1
@@ -529,7 +529,7 @@ export function validateDecryptionKeyPacket(keyPacket, signature, config) {
  * @throws {Error} if the key packet does not meet the requirements
  */
 export function checkKeyRequirements(keyPacket, config) {
-  const keyAlgo = enums.write(enums.publicKey, keyPacket.algorithm);
+  const keyAlgo = assertEnum(enums.publicKey, keyPacket.algorithm);
   const algoInfo = keyPacket.getAlgorithmInfo();
   if (config.rejectPublicKeyAlgorithms.has(keyAlgo)) {
     throw new Error(`${algoInfo.algorithm} keys are considered too weak.`);

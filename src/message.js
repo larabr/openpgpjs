@@ -22,7 +22,7 @@ import { armor, unarmor } from './encoding/armor.js';
 import { Argon2OutOfMemoryError } from './type/s2k/index.js';
 import defaultConfig from './config.ts';
 import { generateSessionKey } from './crypto/index.js';
-import enums from './enums.ts';
+import enums, { assertEnum } from './enums.ts';
 import util from './util.js';
 import { Signature } from './signature.js';
 import { getPreferredCipherSuite, createSignaturePacket } from './key/index.js';
@@ -274,7 +274,7 @@ export class Message {
               try {
                 await pkeskPacket.decrypt(decryptionKeyPacket);
                 const symmetricAlgorithm = expectedSymmetricAlgorithm || pkeskPacket.sessionKeyAlgorithm;
-                if (symmetricAlgorithm && !algos.includes(enums.write(enums.symmetric, symmetricAlgorithm))) {
+                if (symmetricAlgorithm && !algos.includes(assertEnum(enums.symmetric, symmetricAlgorithm))) {
                   throw new Error('A non-preferred symmetric algorithm was used.');
                 }
                 decryptedSessionKeyPackets.push(pkeskPacket);

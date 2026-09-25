@@ -19,7 +19,7 @@
 
 import KeyID from '../type/keyid.js';
 import { parseEncSessionKeyParams, publicKeyEncrypt, publicKeyDecrypt, getCipherParams, serializeParams } from '../crypto/index.js';
-import enums from '../enums.ts';
+import enums, { assertEnum } from '../enums.ts';
 import util from '../util.js';
 import { UnsupportedError } from './packet.js';
 
@@ -139,7 +139,7 @@ class PublicKeyEncryptedSessionKeyPacket {
     this.encrypted = parseEncSessionKeyParams(this.publicKeyAlgorithm, bytes.subarray(offset));
     if (algosWithV3CleartextSessionKeyAlgorithm.has(this.publicKeyAlgorithm)) {
       if (this.version === 3) {
-        this.sessionKeyAlgorithm = enums.write(enums.symmetric, this.encrypted.C.algorithm);
+        this.sessionKeyAlgorithm = assertEnum(enums.symmetric, this.encrypted.C.algorithm);
       } else if (this.encrypted.C.algorithm !== null) {
         throw new Error('Unexpected cleartext symmetric algorithm');
       }
@@ -185,7 +185,7 @@ class PublicKeyEncryptedSessionKeyPacket {
    * @async
    */
   async encrypt(key) {
-    const algo = enums.write(enums.publicKey, this.publicKeyAlgorithm);
+    const algo = assertEnum(enums.publicKey, this.publicKeyAlgorithm);
     // No symmetric encryption algorithm identifier is passed to the public-key algorithm for a
     // v6 PKESK packet, as it is included in the v2 SEIPD packet.
     const sessionKeyAlgorithm = this.version === 3 ? this.sessionKeyAlgorithm : null;

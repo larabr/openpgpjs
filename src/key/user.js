@@ -3,7 +3,7 @@
  * @access private
  */
 
-import enums from '../enums.ts';
+import enums, { assertEnum } from '../enums.ts';
 import util from '../util.js';
 import { PacketList } from '../packet/index.js';
 import { mergeSignatures, isDataRevoked, createSignaturePacket } from './helper.js';
@@ -263,7 +263,7 @@ class User {
     const user = new User(dataToSign.userID || dataToSign.userAttribute, this.mainKey);
     user.revocationSignatures.push(await createSignaturePacket(dataToSign, [], primaryKey, {
       signatureType: enums.signature.certRevocation,
-      reasonForRevocationFlag: enums.write(enums.reasonForRevocation, reasonForRevocationFlag),
+      reasonForRevocationFlag: assertEnum(enums.reasonForRevocation, reasonForRevocationFlag),
       reasonForRevocationString
     }, date, undefined, undefined, false, config));
     await user.update(this);
