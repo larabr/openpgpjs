@@ -1,6 +1,7 @@
 /**
  * @access public
  */
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace enums {
   /** Maps curve names under various standards to one
    * @see {@link https://wiki.gnupg.org/ECC|ECC - GnuPG wiki}
@@ -181,7 +182,7 @@ namespace enums {
 
   /** Data types in the literal packet
    */
-  export const literal = {
+  export const literalFormat = {
     /** Binary data 'b' */
     binary: 0x62,
     /** Text data 't' */

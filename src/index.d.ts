@@ -220,8 +220,8 @@ export function decryptSessionKeys<T extends MaybeStream<Data>>(options: { messa
 export function readMessage<T extends MaybeStream<string>>(options: { armoredMessage: T, config?: PartialConfig }): Promise<Message<T>>;
 export function readMessage<T extends MaybeStream<Uint8Array>>(options: { binaryMessage: T, config?: PartialConfig }): Promise<Message<T>>;
 
-export function createMessage<T extends MaybeStream<string>>(options: { text: T, filename?: string, date?: Date, format?: EnumLabels["literal"] }): Promise<Message<T>>;
-export function createMessage<T extends MaybeStream<Uint8Array>>(options: { binary: T, filename?: string, date?: Date, format?: EnumLabels["literal"] }): Promise<Message<T>>;
+export function createMessage<T extends MaybeStream<string>>(options: { text: T, filename?: string, date?: Date, format?: EnumLabels['literalFormat'] }): Promise<Message<T>>;
+export function createMessage<T extends MaybeStream<Uint8Array>>(options: { binary: T, filename?: string, date?: Date, format?: EnumLabels['literalFormat'] }): Promise<Message<T>>;
 
 export function encrypt<T extends MaybeStream<Data>>(options: EncryptOptions & { message: Message<T>, format?: 'armored' }): Promise<
   T extends WebStream<Data> ? WebStream<string> :
@@ -431,8 +431,8 @@ export class LiteralDataPacket extends BasePacket<true> {
   static readonly tag: typeof enums.packet.literalData;
   private getText(clone?: boolean): MaybeStream<string>;
   private getBytes(clone?: boolean): MaybeStream<Uint8Array>;
-  private setText(text: MaybeStream<string>, format?: Enums['literal']);
-  private setBytes(bytes: MaybeStream<Uint8Array>, format: Enums['literal']);
+  private setText(text: MaybeStream<string>, format?: Enums['literalFormat']);
+  private setBytes(bytes: MaybeStream<Uint8Array>, format: Enums['literalFormat']);
   private setFilename(filename: string);
   private getFilename(): string;
   private writeHeader(): Uint8Array;

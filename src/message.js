@@ -914,9 +914,9 @@ export async function createMessage({ text, binary, filename, date = new Date(),
   const streamType = util.isStream(input);
   const literalDataPacket = new LiteralDataPacket(date);
   if (text !== undefined) {
-    literalDataPacket.setText(input, enums.write(enums.literal, format));
+    literalDataPacket.setText(input, enums.write(enums.literalFormat, format));
   } else {
-    literalDataPacket.setBytes(input, enums.write(enums.literal, format));
+    literalDataPacket.setBytes(input, enums.write(enums.literalFormat, format));
   }
   if (filename !== undefined) {
     literalDataPacket.setFilename(filename);
