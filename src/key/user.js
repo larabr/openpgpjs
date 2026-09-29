@@ -4,7 +4,7 @@
  */
 
 import enums, { assertEnum } from '../enums.ts';
-import util from '../util.js';
+import { wrapError } from '../util.ts';
 import { PacketList } from '../packet/index.js';
 import { mergeSignatures, isDataRevoked, createSignaturePacket } from './helper.js';
 import defaultConfig from '../config.ts';
@@ -135,7 +135,7 @@ class User {
       try {
         await certificate.verify(signingKey.keyPacket, enums.signature.certGeneric, dataToVerify, date, undefined, config);
       } catch (e) {
-        throw util.wrapError('User certificate is invalid', e);
+        throw wrapError('User certificate is invalid', e);
       }
     }));
     return true;
@@ -193,7 +193,7 @@ class User {
         try {
           await selfCertification.verify(primaryKey, enums.signature.certGeneric, dataToVerify, date, undefined, config);
         } catch (e) {
-          throw util.wrapError('Self-certification is invalid', e);
+          throw wrapError('Self-certification is invalid', e);
         }
         return true;
       } catch (e) {

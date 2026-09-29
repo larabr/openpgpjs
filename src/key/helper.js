@@ -11,7 +11,7 @@ import {
 } from '../packet/index.js';
 import enums, { assertEnum } from '../enums.ts';
 import { getPreferredCurveHashAlgo, getHashByteLength, publicKey } from '../crypto/index.js';
-import util from '../util.js';
+import { equalsUint8Array, isString, normalizeDate, wrapError } from '../util.ts';
 import defaultConfig from '../config.ts';
 
 export async function generateSecretSubkey(options, config) {
@@ -59,7 +59,7 @@ export async function getLatestValidSignature(signatures, publicKey, signatureTy
     }
   }
   if (!latestValid) {
-    throw util.wrapError(
+    throw wrapError(
       `Could not find valid ${enums.read(enums.signature, signatureType)} signature in key ${publicKey.getKeyID().toHex()}`
         .replace('certGeneric ', 'self-')
         .replace(/([a-z])([A-Z])/g, (_, $1, $2) => $1 + ' ' + $2.toLowerCase()),
@@ -69,7 +69,7 @@ export async function getLatestValidSignature(signatures, publicKey, signatureTy
 }
 
 export function isDataExpired(keyPacket, signature, date = new Date()) {
-  const normDate = util.normalizeDate(date);
+  const normDate = normalizeDate(date);
   if (normDate !== null) {
     const expirationTime = getKeyExpirationTime(keyPacket, signature);
     return !(keyPacket.created <= normDate && normDate < expirationTime);
@@ -323,7 +323,7 @@ export async function mergeSignatures(source, dest, attr, date = new Date(), che
       await Promise.all(source.map(async function(sourceSig) {
         if (!sourceSig.isExpired(date) && (!checkFn || await checkFn(sourceSig)) &&
             !dest[attr].some(function(destSig) {
-              return util.equalsUint8Array(destSig.writeParams(), sourceSig.writeParams());
+              return equalsUint8Array(destSig.writeParams(), sourceSig.writeParams());
             })) {
           dest[attr].push(sourceSig);
         }
@@ -409,7 +409,7 @@ export function sanitizeKeyOptions(options, subkeyDefaults = {}) {
   options.curve = options.curve || subkeyDefaults.curve;
   options.rsaBits = options.rsaBits || subkeyDefaults.rsaBits;
   options.keyExpirationTime = options.keyExpirationTime !== undefined ? options.keyExpirationTime : subkeyDefaults.keyExpirationTime;
-  options.passphrase = util.isString(options.passphrase) ? options.passphrase : subkeyDefaults.passphrase;
+  options.passphrase = isString(options.passphrase) ? options.passphrase : subkeyDefaults.passphrase;
   options.date = options.date || subkeyDefaults.date;
 
   options.sign = options.sign || false;

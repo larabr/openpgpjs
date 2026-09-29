@@ -20,7 +20,7 @@
 import KeyID from '../type/keyid.js';
 import { parseEncSessionKeyParams, publicKeyEncrypt, publicKeyDecrypt, getCipherParams, serializeParams } from '../crypto/index.js';
 import enums, { assertEnum } from '../enums.ts';
-import util from '../util.js';
+import * as util from '../util.ts';
 import { UnsupportedError } from './packet.js';
 
 const algosWithV3CleartextSessionKeyAlgorithm = new Set([

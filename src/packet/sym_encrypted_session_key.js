@@ -22,7 +22,7 @@ import defaultConfig from '../config.ts';
 import { cipherMode, generateSessionKey, getCipherParams, getRandomBytes } from '../crypto/index.js';
 import computeHKDF from '../crypto/hkdf.js';
 import enums, { assertEnum } from '../enums.ts';
-import util from '../util.js';
+import { concatUint8Array } from '../util.ts';
 import { UnsupportedError } from './packet.js';
 
 /**
@@ -140,14 +140,14 @@ class SymEncryptedSessionKeyPacket {
     if (this.version === 6) {
       const s2kLen = s2k.length;
       const fieldsLen = 3 + s2kLen + this.iv.length;
-      bytes = util.concatUint8Array([new Uint8Array([this.version, fieldsLen, algo, this.aeadAlgorithm, s2kLen]), s2k, this.iv, this.encrypted]);
+      bytes = concatUint8Array([new Uint8Array([this.version, fieldsLen, algo, this.aeadAlgorithm, s2kLen]), s2k, this.iv, this.encrypted]);
     } else if (this.version === 5) {
-      bytes = util.concatUint8Array([new Uint8Array([this.version, algo, this.aeadAlgorithm]), s2k, this.iv, this.encrypted]);
+      bytes = concatUint8Array([new Uint8Array([this.version, algo, this.aeadAlgorithm]), s2k, this.iv, this.encrypted]);
     } else {
-      bytes = util.concatUint8Array([new Uint8Array([this.version, algo]), s2k]);
+      bytes = concatUint8Array([new Uint8Array([this.version, algo]), s2k]);
 
       if (this.encrypted !== null) {
-        bytes = util.concatUint8Array([bytes, this.encrypted]);
+        bytes = concatUint8Array([bytes, this.encrypted]);
       }
     }
 
@@ -221,7 +221,7 @@ class SymEncryptedSessionKeyPacket {
       const modeInstance = await mode(algo, encryptionKey);
       this.encrypted = await modeInstance.encrypt(this.sessionKey, this.iv, adata);
     } else {
-      const toEncrypt = util.concatUint8Array([
+      const toEncrypt = concatUint8Array([
         new Uint8Array([this.sessionKeyAlgorithm]),
         this.sessionKey
       ]);

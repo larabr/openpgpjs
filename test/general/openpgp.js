@@ -8,7 +8,7 @@ chaiUse(chaiAsPromised);
 
 import openpgp from '../initOpenpgp.js';
 import * as crypto from '../../src/crypto/index.js';
-import util from '../../src/util.js';
+import * as util from '../../src/util.ts';
 import keyIDType from '../../src/type/keyid.js';
 import { getPreferredCipherSuite } from '../../src/key/index.js';
 

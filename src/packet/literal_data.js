@@ -19,7 +19,7 @@
 
 import { isArrayStream, passiveClone as streamPassiveClone, parse as streamParse, readToEnd as streamReadToEnd } from '@openpgp/web-stream-tools';
 import enums from '../enums.ts';
-import util from '../util.js';
+import * as util from '../util.ts';
 
 /**
  * Implementation of the Literal Data Packet (Tag 11)

@@ -23,7 +23,7 @@ import { Argon2OutOfMemoryError } from './type/s2k/index.js';
 import defaultConfig from './config.ts';
 import { generateSessionKey } from './crypto/index.js';
 import enums, { assertEnum } from './enums.ts';
-import util from './util.js';
+import * as util from './util.ts';
 import { Signature } from './signature.js';
 import { getPreferredCipherSuite, createSignaturePacket } from './key/index.js';
 import {
